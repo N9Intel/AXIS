@@ -11,7 +11,7 @@ It transforms raw access listings into structured intelligence, providing early-
 AXIS v0.1 includes:
 
 ### ✔ Manual Listing Input
-Add raw access-broker listings (broker, sector, revenue range, access details, source).
+Add raw access-broker listings (broker, sector, revenue range)
 
 ### ✔ Normalization Engine  
 Automatically cleans and standardizes inputs:
@@ -19,9 +19,6 @@ Automatically cleans and standardizes inputs:
 - whitespace removal  
 - normalized dates  
 - standardized fields  
-
-### ✔ Deduplication  
-Prevents duplicate brokers or listings from being stored.
 
 ### ✔ CSV Intelligence Database  
 Listings stored in a clean CSV file:
