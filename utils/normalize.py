@@ -5,17 +5,13 @@ def normalize_broker_name(name: str) -> str:
     if not name:
         return ""
     
-    original = name
     name = name.strip().lower()
 
     name = re.sub(r"\s+", " ", name)
     name = re.sub(r"[^a-z0-9 ._-]", "", name)
     name = re.sub(r"\s+", " ", name).strip()
 
-    print(f"[DEBUG] normalize_broker_name: '{original}' -> '{name}'")
-
     return name 
-
 
 SECTOR_MAP = {
     # government
