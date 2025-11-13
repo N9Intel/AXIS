@@ -116,6 +116,7 @@ def find_by_tier_flow() -> None:
     tier = mapping.get(tier_raw)
     if tier is None:
         print("\n[ERROR] Tier must be High, Medium, or Low\n")
+        wait_for_enter()
         return
 
     rows = find_by_tier(tier)
