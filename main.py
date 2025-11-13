@@ -34,7 +34,32 @@ def save_listing() -> None:
     revenue = normalize_revenue(revenue_raw)
     tier = calculate_tier(listings)
 
-    insert_listing(broker, listings, tier, sector, revenue)
+    if not broker:
+        print("\n[ERROR] Broker name is required and cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    if not sector:
+        print("\n[ERROR] Sector is required and cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    if not revenue:
+        print("\n[ERROR] Revenue is required and cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    
+    if broker != normalize_broker_name(broker_raw):
+        print(f"\n[INFO] Normalized broker name to: {broker}")
+
+    try:
+        insert_listing(broker, listings, tier, sector, revenue)
+    except Exception as e:
+        print(f"\n[ERROR] Failed to save listing to database: {e}\n")
+        wait_for_enter()
+        return
+
 
     print("\n[OK] Saved listing:")
     print(f"  Broker:   {broker}")
