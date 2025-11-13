@@ -1,10 +1,8 @@
-import csv
-from pathlib import Path
 import sys
 
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
-from db.database import create_tables, insert_listing, get_all_listings, find_by_broker, find_by_tier, find_by_sector
+from db.database import create_tables, insert_listing, get_all_listings, find_by_broker, find_by_tier, find_by_sector, search_query
 
 def prompt(text: str) -> str:
     return input(text).strip()
@@ -108,6 +106,18 @@ def find_by_sector_flow() -> None:
     print_rows(rows)
     wait_for_enter()
 
+def search_query_flow() -> None:
+    print("\n[Search]\n")
+    q = prompt("Query: ").lower().strip()
+
+    if not q:
+        print("\n[ERROR] Query cannot be empty\n")
+        return
+    
+    rows = search_query(q)
+    print_rows(rows)
+    wait_for_enter()
+
 
 def print_menu() -> None:
     print("AXIS v0.2 - IAB Listings")
@@ -117,6 +127,7 @@ def print_menu() -> None:
     print("[3] Find listings by broker")
     print("[4] Find listings by tier")
     print("[5] Find listings by sector")
+    print("[6] Search (query)")
     print("[0] Exit")
     print()
 
@@ -137,6 +148,8 @@ def main() -> None:
             find_by_tier_flow()
         elif choice == "5":
             find_by_sector_flow()
+        elif choice == "6":
+            search_query_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)
