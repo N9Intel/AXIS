@@ -69,3 +69,36 @@ def find_by_broker(broker: str) -> list[tuple]:
             """,
             (broker,),
         )
+          return cursor.fetchall()
+
+
+def find_by_tier(tier: str) -> list[tuple]:
+     with get_connection() as conn:
+          cursor = conn.cursor()
+          cursor.execute(
+            """
+            SELECT
+                id, broker, listings, tier, sector, revenue, created_at
+            FROM listings
+            WHERE tier = ?
+            ORDER BY created_at DESC
+            """,
+            (tier,),
+        )
+          return cursor.fetchall()
+     
+
+def find_by_sector(sector: str) -> list[tuple]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                id, broker, listings, tier, sector, revenue, created_at
+            FROM listings
+            WHERE sector = ?
+            ORDER BY created_at DESC
+            """,
+            (sector,),
+        )
+        return cursor.fetchall()
