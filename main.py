@@ -55,6 +55,7 @@ def view_all_listings() -> None:
     print("\n[All listings]")
     rows = get_all_listings()
     print_rows(rows)
+    input("Press ENTER to return to menu...")
 
 def find_by_broker() -> None:
     print("\n[Find by broker]\n")
