@@ -9,6 +9,12 @@ from db.database import create_tables, insert_listing, get_all_listings, find_by
 def prompt(text: str) -> str:
     return input(text).strip()
 
+
+def wait_for_enter() -> None:
+    """Pause so the user can read output before returning to the menu."""
+    input("Press ENTER to return to the menu...")
+
+
 def save_listing() -> None:
     print("\n [Add listing]\n")
     
@@ -38,6 +44,8 @@ def save_listing() -> None:
     print(f"  Sector:   {sector}")
     print(f"  Revenue:  {revenue}\n")
 
+    wait_for_enter()
+
 def print_rows(rows: list[tuple]) -> None:
     if not rows:
         print("\n[No results]\n")
@@ -50,19 +58,24 @@ def print_rows(rows: list[tuple]) -> None:
         print(f"     Sector: {sector} | Revenue: {revenue} | Created: {created_at}")
         print()
     print()
+    
+
 
 def view_all_listings() -> None:
     print("\n[All listings]")
     rows = get_all_listings()
     print_rows(rows)
-    input("Press ENTER to return to menu...")
+    wait_for_enter()
 
-def find_by_broker() -> None:
+
+def find_by_broker_flow() -> None:
     print("\n[Find by broker]\n")
     broker_raw = prompt("Broker name: ")
     broker = normalize_broker_name(broker_raw)
     rows = find_by_broker(broker)
     print_rows(rows)
+    wait_for_enter()
+
 
 def find_by_tier_flow() -> None:
     print("\n[Find by tier]\n")
@@ -84,6 +97,8 @@ def find_by_tier_flow() -> None:
 
     rows = find_by_tier(tier)
     print_rows(rows)
+    wait_for_enter()
+
 
 def find_by_sector_flow() -> None:
     print("\n[Find by sector]\n")
@@ -91,6 +106,8 @@ def find_by_sector_flow() -> None:
     sector = normalize_sector(sector_raw)
     rows = find_by_sector(sector)
     print_rows(rows)
+    wait_for_enter()
+
 
 def print_menu() -> None:
     print("AXIS v0.2 - IAB Listings")
@@ -115,7 +132,7 @@ def main() -> None:
         elif choice == "2":
             view_all_listings()
         elif choice == "3":
-            find_by_broker()
+            find_by_broker_flow()
         elif choice == "4":
             find_by_tier_flow()
         elif choice == "5":
