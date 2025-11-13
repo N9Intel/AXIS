@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments (if you ever make one)
+venv/
+env/
+
+# SQLite database files (never upload your real data!)
+axis.db
+*.db
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs (if you create them later)
+*.log
+
+# PyCharm / VSCode configs (optional)
+.idea/
+.vscode/
