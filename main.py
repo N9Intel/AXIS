@@ -183,4 +183,8 @@ def main() -> None:
             print("\n[ERROR] Invalid choice\n")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n[INFO] Interrupted by user. Exiting.\n")
+        sys.exit(0)
