@@ -24,8 +24,7 @@ Automatically cleans and standardizes inputs:
 Prevents duplicate brokers or listings from being stored.
 
 ### ✔ CSV Intelligence Database  
-Listings, brokers, and metadata stored in clean CSV files:
-- `data/brokers.csv`
+Listings stored in a clean CSV file:
 - `data/listings.csv`
 
 ### ✔ Risk Scoring  
