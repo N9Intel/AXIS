@@ -80,7 +80,7 @@ def find_by_tier(tier: str) -> list[tuple]:
             SELECT
                 id, broker, listings, tier, sector, revenue, created_at
             FROM listings
-            WHERE tier = ?
+            WHERE LOWER(tier) = LOWER(?)
             ORDER BY created_at DESC
             """,
             (tier,),
