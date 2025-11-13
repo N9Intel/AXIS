@@ -102,3 +102,23 @@ def find_by_sector(sector: str) -> list[tuple]:
             (sector,),
         )
         return cursor.fetchall()
+
+def search_query(q: str) -> list[tuple]:
+     q = f"%{q.lower()}%"
+
+     with get_connection() as conn:
+          cursor = conn.cursor()
+          cursor.execute(
+            """
+            SELECT id, broker, listings, tier, sector, revenue, created_at
+            FROM listings
+            WHERE LOWER(broker) LIKE ?
+               OR LOWER(sector) LIKE ?
+               OR LOWER(revenue) LIKE ?
+               OR LOWER(tier) LIKE ?
+            ORDER BY created_at DESC
+            """,
+            (q, q, q, q),
+        )
+          
+          return cursor.fetchall()
