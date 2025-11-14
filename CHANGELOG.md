@@ -26,7 +26,7 @@ All notable changes to AXIS will be documented here.
 
 ---
 
-## **v0.1.0 — 2025-11-01**
+## **v0.1.0 — 2025-11-13
 ### Added
 - CSV-based storage
 - Basic normalization (v1)
