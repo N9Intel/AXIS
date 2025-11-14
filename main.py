@@ -2,7 +2,7 @@ import sys
 
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
-from db.database import create_tables, insert_listing, get_all_listings, find_by_broker, find_by_tier, find_by_sector, search_query
+from db.database import create_tables, insert_listing, get_all_listings, find_by_broker, find_by_sector, search_query
 
 def prompt(text: str) -> str:
     return input(text).strip()
@@ -100,30 +100,6 @@ def find_by_broker_flow() -> None:
     wait_for_enter()
 
 
-def find_by_tier_flow() -> None:
-    print("\n[Find by tier]\n")
-    tier_raw = prompt("Tier (High / Medium / Low): ").strip().lower()
-
-    mapping = {
-        "high": "High",
-        "h": "High",
-        "medium": "Medium",
-        "m": "Medium",
-        "low": "Low",
-        "l": "Low",
-    }
-
-    tier = mapping.get(tier_raw)
-    if tier is None:
-        print("\n[ERROR] Tier must be High, Medium, or Low\n")
-        wait_for_enter()
-        return
-
-    rows = find_by_tier(tier)
-    print_rows(rows)
-    wait_for_enter()
-
-
 def find_by_sector_flow() -> None:
     print("\n[Find by sector]\n")
     sector_raw = prompt("Sector: ")
@@ -131,6 +107,7 @@ def find_by_sector_flow() -> None:
     rows = find_by_sector(sector)
     print_rows(rows)
     wait_for_enter()
+
 
 def search_query_flow() -> None:
     print("\n[Search]\n")
@@ -170,8 +147,6 @@ def main() -> None:
             view_all_listings()
         elif choice == "3":
             find_by_broker_flow()
-        elif choice == "4":
-            find_by_tier_flow()
         elif choice == "5":
             find_by_sector_flow()
         elif choice == "6":
