@@ -144,6 +144,12 @@ Planned improvements:
 
     Initial structure for real listing ingestion
 
+    Export results to CSV
+
+    Delete listings
+
+    
+
 AXIS v0.2 is the foundation for deeper intelligence automation coming in v0.3+.
 
 
