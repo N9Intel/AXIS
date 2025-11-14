@@ -1,6 +1,6 @@
 from pathlib import Path
 import sqlite3
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 
 DB_PATH = Path("axis.db") #should change to .env file
@@ -14,11 +14,9 @@ def get_connection() -> sqlite3.Connection:
 
 
 def create_tables() -> None:
-    """Create brokers and listings tables if they don't exist."""
     with get_connection() as conn:
         cursor = conn.cursor()
 
-        # Brokers table: one row per broker
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS brokers (
@@ -31,7 +29,6 @@ def create_tables() -> None:
             """
         )
 
-        # Listings table: one row per access listing, linked to a broker
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS listings (
@@ -55,97 +52,230 @@ def create_tables() -> None:
         conn.commit()
 
 
-
-def insert_listing(broker: str,listings: str,tier: str,sector: str,revenue: str,) -> None:
-     with get_connection() as conn:
-          cursor = conn.cursor()
-          cursor.execute(
+def insert_broker(name: str, raw_name: str, notes: str) -> int:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
             """
-            INSERT INTO listings (broker, listings, tier, sector, revenue)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO brokers (name, raw_name, notes)
+            VALUES (?, ?, ?)
             """,
-            (broker, listings, tier, sector, revenue),
+            (name, raw_name, notes),
         )
-          conn.commit()
+        conn.commit()
+        return cursor.lastrowid
+    
 
-
-def get_all_listings() -> list[tuple]:
-     with get_connection() as conn:
-          cursor = conn.cursor()
-          cursor.execute(
+def get_all_brokers() -> List[Tuple]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
             """
-            SELECT
-                id, broker, listings, tier, sector, revenue, created_at
-            FROM listings
+            SELECT id, name, raw_name, notes, created_at
+            FROM brokers
             ORDER BY created_at DESC
             """
         )
-          return cursor.fetchall()
+        return cursor.fetchall()
 
 
-def find_by_broker(broker: str) -> list[tuple]:
-     with get_connection() as conn:
-          cursor = conn.cursor()
-          cursor.execute(
+def find_broker_by_name(name: str) -> Optional[Tuple]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
             """
-            SELECT
-                id, broker, listings, tier, sector, revenue, created_at
-            FROM listings
-            WHERE broker = ?
-            ORDER BY created_at DESC
+            SELECT id, name, raw_name, notes, created_at
+            FROM brokers
+            WHERE name = ?
             """,
-            (broker,),
+            (name,),
         )
-          return cursor.fetchall()
+        return cursor.fetchone()
 
 
-def find_by_tier(tier: str) -> list[tuple]:
-     with get_connection() as conn:
-          cursor = conn.cursor()
-          cursor.execute(
+def get_broker_by_id(broker_id: int) -> Optional[Tuple]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
             """
-            SELECT
-                id, broker, listings, tier, sector, revenue, created_at
-            FROM listings
-            WHERE LOWER(tier) = LOWER(?)
-            ORDER BY created_at DESC
+            SELECT id, name, raw_name, notes, created_at
+            FROM brokers
+            WHERE id = ?
             """,
-            (tier,),
+            (broker_id,),
         )
-          return cursor.fetchall()
-     
+        return cursor.fetchone()
+    
 
-def find_by_sector(sector: str) -> list[tuple]:
+def insert_listing(
+    broker_id: int,
+    access_type: str,
+    country: str,
+    privilege: str,
+    price: str,
+    description: str,
+    source: str,
+    post_date: str,
+    sector: str,
+    revenue: str,
+) -> int:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO listings (
+                broker_id,
+                access_type,
+                country,
+                privilege,
+                price,
+                description,
+                source,
+                post_date,
+                sector,
+                revenue
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                broker_id,
+                access_type,
+                country,
+                privilege,
+                price,
+                description,
+                source,
+                post_date,
+                sector,
+                revenue,
+            ),
+        )
+        conn.commit()
+        return cursor.lastrowid
+
+
+def get_all_listings() -> List[Tuple]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
             """
             SELECT
-                id, broker, listings, tier, sector, revenue, created_at
-            FROM listings
-            WHERE sector = ?
-            ORDER BY created_at DESC
+                l.id,
+                b.name AS broker_name,
+                l.access_type,
+                l.country,
+                l.privilege,
+                l.price,
+                l.description,
+                l.source,
+                l.post_date,
+                l.sector,
+                l.revenue,
+                l.created_at
+            FROM listings l
+            JOIN brokers b ON l.broker_id = b.id
+            ORDER BY l.created_at DESC
+            """
+        )
+        return cursor.fetchall()
+
+
+def find_listings_by_broker_name(broker_name: str) -> List[Tuple]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                l.id,
+                b.name AS broker_name,
+                l.access_type,
+                l.country,
+                l.privilege,
+                l.price,
+                l.description,
+                l.source,
+                l.post_date,
+                l.sector,
+                l.revenue,
+                l.created_at
+            FROM listings l
+            JOIN brokers b ON l.broker_id = b.id
+            WHERE b.name = ?
+            ORDER BY l.created_at DESC
+            """,
+            (broker_name,),
+        )
+        return cursor.fetchall()
+     
+
+def find_listings_by_sector(sector: str) -> List[Tuple]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                l.id,
+                b.name AS broker_name,
+                l.access_type,
+                l.country,
+                l.privilege,
+                l.price,
+                l.description,
+                l.source,
+                l.post_date,
+                l.sector,
+                l.revenue,
+                l.created_at
+            FROM listings l
+            JOIN brokers b ON l.broker_id = b.id
+            WHERE l.sector = ?
+            ORDER BY l.created_at DESC
             """,
             (sector,),
         )
         return cursor.fetchall()
 
-def search_query(q: str) -> list[tuple]:
-     q = f"%{q.lower()}%"
+def search_query(q: str) -> List[Tuple]:
+    """
+    Freeform search across broker name, access type, country, privilege,
+    price, description, source, sector, revenue, and post_date.
 
-     with get_connection() as conn:
-          cursor = conn.cursor()
-          cursor.execute(
+    Returns rows in the same format as get_all_listings().
+    """
+    pattern = f"%{q.lower()}%"
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
             """
-            SELECT id, broker, listings, tier, sector, revenue, created_at
-            FROM listings
-            WHERE LOWER(broker) LIKE ?
-               OR LOWER(sector) LIKE ?
-               OR LOWER(revenue) LIKE ?
-               OR LOWER(tier) LIKE ?
-            ORDER BY created_at DESC
+            SELECT
+                l.id,
+                b.name AS broker_name,
+                l.access_type,
+                l.country,
+                l.privilege,
+                l.price,
+                l.description,
+                l.source,
+                l.post_date,
+                l.sector,
+                l.revenue,
+                l.created_at
+            FROM listings l
+            JOIN brokers b ON l.broker_id = b.id
+            WHERE
+                LOWER(b.name)      LIKE ?
+             OR LOWER(l.access_type) LIKE ?
+             OR LOWER(l.country)     LIKE ?
+             OR LOWER(l.privilege)   LIKE ?
+             OR LOWER(l.price)       LIKE ?
+             OR LOWER(l.description) LIKE ?
+             OR LOWER(l.source)      LIKE ?
+             OR LOWER(l.sector)      LIKE ?
+             OR LOWER(l.revenue)     LIKE ?
+             OR LOWER(l.post_date)   LIKE ?
+            ORDER BY l.created_at DESC
             """,
-            (q, q, q, q),
+            (pattern,) * 10,
         )
-          
-          return cursor.fetchall()
+        return cursor.fetchall()

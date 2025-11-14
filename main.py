@@ -2,7 +2,7 @@ import sys
 
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
-from db.database import create_tables, insert_listing, get_all_listings, find_by_broker, find_by_sector, search_query
+from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query
 
 def prompt(text: str) -> str:
     return input(text).strip()
@@ -13,100 +13,196 @@ def wait_for_enter() -> None:
     input("Press ENTER to return to the menu...")
 
 
-def save_listing() -> None:
-    print("\n [Add listing]\n")
-    
-    broker_raw = prompt("Broker name: ")
-    listings_raw = prompt("Total broker listings: ")
-    sector_raw = prompt("Target sector: ")
-    revenue_raw = prompt("Revenue range (e.g. 10-25M): ")
-
-    try:
-        listings = int(listings_raw)
-        if listings < 0:
-            raise ValueError
-    except ValueError:
-         print("\n[ERROR] Listings must be a whole number (0 or more)")
-         return
-    
-    broker = normalize_broker_name(broker_raw)
-    sector = normalize_sector(sector_raw)
-    revenue = normalize_revenue(revenue_raw)
-    tier = calculate_tier(listings)
-
-    if not broker:
-        print("\n[ERROR] Broker name is required and cannot be empty.\n")
-        wait_for_enter()
-        return
-
-    if not sector:
-        print("\n[ERROR] Sector is required and cannot be empty.\n")
-        wait_for_enter()
-        return
-
-    if not revenue:
-        print("\n[ERROR] Revenue is required and cannot be empty.\n")
-        wait_for_enter()
-        return
-
-    
-    if broker != normalize_broker_name(broker_raw):
-        print(f"\n[INFO] Normalized broker name to: {broker}")
-
-    try:
-        insert_listing(broker, listings, tier, sector, revenue)
-    except Exception as e:
-        print(f"\n[ERROR] Failed to save listing to database: {e}\n")
-        wait_for_enter()
-        return
-
-
-    print("\n[OK] Saved listing:")
-    print(f"  Broker:   {broker}")
-    print(f"  Listings: {listings} (Tier: {tier})")
-    print(f"  Sector:   {sector}")
-    print(f"  Revenue:  {revenue}\n")
-
-    wait_for_enter()
-
-def print_rows(rows: list[tuple]) -> None:
+def print_brokers(rows):
     if not rows:
-        print("\n[No results]\n")
+        print("\n[No brokers found]\n")
         return
-    
+
     print()
-    for row in rows:
-        row_id, broker, listings, tier, sector, revenue, created_at = row
-        print(f"[{row_id}] {broker} | {listings} listings | {tier}")
-        print(f"     Sector: {sector} | Revenue: {revenue} | Created: {created_at}")
+    for broker_id, name, raw_name, notes, created_at in rows:
+        display_name = raw_name or name
+        print(f"[{broker_id}] {display_name} (normalized: {name})")
+        if notes:
+            preview = notes if len(notes) <= 80 else notes[:77] + "..."
+            print(f"    Notes: {preview}")
+        print(f"    Created: {created_at}")
         print()
     print()
-    
 
 
-def view_all_listings() -> None:
-    print("\n[All listings]")
+def print_listings(rows):
+    if not rows:
+        print("\n[No listings found]\n")
+        return
+
+    print()
+    for (
+        listing_id,
+        broker_name,
+        access_type,
+        country,
+        privilege,
+        price,
+        description,
+        source,
+        post_date,
+        sector,
+        revenue,
+        created_at,
+    ) in rows:
+        print(f"[{listing_id}] Broker: {broker_name}")
+        print(
+            f"    Access: {access_type or '-'} | Country: {country or '-'} | "
+            f"Privilege: {privilege or '-'}"
+        )
+        print(f"    Price: {price or '-'} | Sector: {sector or '-'} | Revenue: {revenue or '-'}")
+        print(f"    Source: {source or '-'} | Post date: {post_date or '-'}")
+        if description:
+            short_desc = description if len(description) <= 100 else description[:97] + "..."
+            print(f"    Desc: {short_desc}")
+        print(f"    Created: {created_at}")
+        print()
+    print()
+
+
+def add_broker_flow() -> None:
+    print("\n[Add broker]\n")
+
+    raw_name = prompt("Broker name: ")
+    notes = prompt("Notes (optional): ")
+
+    normalized_name = normalize_broker_name(raw_name)
+
+    if not normalized_name:
+        print("\n[ERROR] Broker name cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    existing = find_broker_by_name(normalized_name)
+    if existing:
+        broker_id = existing[0]
+        print(f"\n[WARN] Broker already exists with ID {broker_id}.")
+        choice = prompt("Add duplicate broker anyway? (y/N): ").lower()
+        if choice != "y":
+            wait_for_enter()
+            return
+
+    created_id = insert_broker(normalized_name, raw_name, notes)
+    print(f"\n[OK] Broker added with ID {created_id}\n")
+    wait_for_enter()
+
+
+def view_brokers_flow() -> None:
+    print("\n[All brokers]\n")
+    rows = get_all_brokers()
+    print_brokers(rows)
+    wait_for_enter()
+
+
+def add_listing_flow() -> None:
+    print("\n[Add listing]\n")
+
+    broker_raw = prompt("Broker name (must already exist): ")
+    broker_name = normalize_broker_name(broker_raw)
+
+    if not broker_name:
+        print("\n[ERROR] Broker name cannot be empty\n")
+        wait_for_enter()
+        return
+
+    broker_row = find_broker_by_name(broker_name)
+    if not broker_row:
+        print(f"\n[ERROR] Broker '{broker_name}' not found. Add it first using option [1].\n")
+        wait_for_enter()
+        return
+
+    broker_id = broker_row[0]
+
+    access_type = prompt("Access type (rdp/vpn/etc): ").lower()
+    country = prompt("Country (US/GB/RU/etc): ").upper()
+    privilege = prompt("Privilege (admin/user, optional): ").lower()
+    price = prompt("Price (e.g. 500, 0.1 BTC): ")
+    description = prompt("Short description: ")
+    source = prompt("Source forum (exploit/ramp/etc): ").lower()
+    post_date = prompt("Post date (free text): ")
+    sector = normalize_sector(prompt("Sector (optional): "))
+    revenue = normalize_revenue(prompt("Revenue (optional): "))
+
+    if not access_type:
+        print("\n[ERROR] Access type is required\n")
+        wait_for_enter()
+        return
+
+    if not country:
+        print("\n[ERROR] Country is required\n")
+        wait_for_enter()
+        return
+
+    if not price:
+        print("\n[ERROR] Price is required\n")
+        wait_for_enter()
+        return
+
+    if not description:
+        print("\n[ERROR] Description is required\n")
+        wait_for_enter()
+        return
+
+    listing_id = insert_listing(
+        broker_id,
+        access_type,
+        country,
+        privilege,
+        price,
+        description,
+        source,
+        post_date,
+        sector,
+        revenue,
+    )
+
+    print(f"\n[OK] Added listing with ID {listing_id}\n")
+    wait_for_enter()
+
+
+def view_listings_flow() -> None:
+    print("\n[All listings]\n")
     rows = get_all_listings()
-    print_rows(rows)
+    print_listings(rows)
     wait_for_enter()
 
 
-def find_by_broker_flow() -> None:
-    print("\n[Find by broker]\n")
+def find_listings_by_broker_flow() -> None:
+    print("\n[Find listings by broker]\n")
     broker_raw = prompt("Broker name: ")
-    broker = normalize_broker_name(broker_raw)
-    rows = find_by_broker(broker)
-    print_rows(rows)
+    broker_name = normalize_broker_name(broker_raw)
+
+    if not broker_name:
+        print("\n[ERROR] Broker name cannot be empty\n")
+        wait_for_enter()
+        return
+
+    rows = find_listings_by_broker_name(broker_name)
+    print_listings(rows)
     wait_for_enter()
 
 
-def find_by_sector_flow() -> None:
-    print("\n[Find by sector]\n")
+def find_listings_by_sector_flow() -> None:
+    print("\n[Find listings by sector]\n")
     sector_raw = prompt("Sector: ")
     sector = normalize_sector(sector_raw)
-    rows = find_by_sector(sector)
-    print_rows(rows)
+
+    if not sector:
+        print("\n[ERROR] Sector cannot be empty\n")
+        wait_for_enter()
+        return
+
+    rows = find_listings_by_sector(sector)
+    print_listings(rows)
     wait_for_enter()
+
+
+
 
 
 def search_query_flow() -> None:
@@ -115,22 +211,24 @@ def search_query_flow() -> None:
 
     if not q:
         print("\n[ERROR] Query cannot be empty\n")
+        wait_for_enter()
         return
     
     rows = search_query(q)
-    print_rows(rows)
+    print_listings(rows)
     wait_for_enter()
 
 
 def print_menu() -> None:
     print("AXIS v0.2 - IAB Listings")
     print("------------------------")
-    print("[1] Add listing")
-    print("[2] View all listings")
-    print("[3] Find listings by broker")
-    print("[4] Find listings by tier")
-    print("[5] Find listings by sector")
-    print("[6] Search (query)")
+    print("[1] Add broker")
+    print("[2] View brokers")
+    print("[3] Add listing")
+    print("[4] View listings ")
+    print("[5] Find listings by broker")
+    print("[6] Find listings by sector")
+    print("[7] Search (query)")
     print("[0] Exit")
     print()
 
@@ -142,20 +240,25 @@ def main() -> None:
         choice = prompt("> ")
 
         if choice == "1":
-            save_listing()
+            add_broker_flow()
         elif choice == "2":
-            view_all_listings()
+            view_brokers_flow()
         elif choice == "3":
-            find_by_broker_flow()
+            add_listing_flow()
+        elif choice == "4":
+            view_listings_flow()
         elif choice == "5":
-            find_by_sector_flow()
+            find_listings_by_broker_flow()
         elif choice == "6":
+            find_listings_by_sector_flow()
+        elif choice == "7":
             search_query_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)
         else:
             print("\n[ERROR] Invalid choice\n")
+            wait_for_enter()
 
 if __name__ == "__main__":
     try:
