@@ -7,26 +7,53 @@ DB_PATH = Path("axis.db") #should change to .env file
 
 
 def get_connection() -> sqlite3.Connection:
-     return sqlite3.connect(DB_PATH)
+     conn = sqlite3.connect(DB_PATH)
+     
+     conn.execute("PRAGMA foreign_keys = ON;")
+     return conn
 
 
 def create_tables() -> None:
-     with get_connection() as conn:
-          cursor = conn.cursor()
-          cursor.execute(
+    """Create brokers and listings tables if they don't exist."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        # Brokers table: one row per broker
+        cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS listings (
+            CREATE TABLE IF NOT EXISTS brokers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                broker TEXT NOT NULL,
-                listings INTEGER NOT NULL,
-                tier TEXT NOT NULL,
-                sector TEXT NOT NULL,
-                revenue TEXT NOT NULL,
+                name TEXT NOT NULL,         -- normalized broker name
+                raw_name TEXT,              -- original broker name as seen
+                notes TEXT,                 -- optional analyst notes
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
-          conn.commit()
+
+        # Listings table: one row per access listing, linked to a broker
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS listings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                broker_id INTEGER NOT NULL,
+                access_type TEXT,
+                country TEXT,
+                privilege TEXT,
+                price TEXT,
+                description TEXT,
+                source TEXT,
+                post_date TEXT,
+                sector TEXT,
+                revenue TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (broker_id) REFERENCES brokers(id) ON DELETE CASCADE
+            )
+            """
+        )
+
+        conn.commit()
+
 
 
 def insert_listing(broker: str,listings: str,tier: str,sector: str,revenue: str,) -> None:
