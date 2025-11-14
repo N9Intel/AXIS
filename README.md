@@ -114,24 +114,6 @@ AXIS v0.2 includes improved input safety:
 - database issues handled gracefully  
 - Ctrl+C clean exit support  
 
----
-
-# Project Structure
-
-axis/
-├── main.py # CLI interface
-├── db/
-│ └── database.py # SQLite logic
-├── utils/
-│ ├── normalize.py # normalization v2
-│ └── scoring.py # tier scoring
-├── .gitignore
-└── README.md
-
-
-`axis.db` is automatically created and intentionally excluded from the repository.
-
----
 
 # 🪜 Installation & Usage
 
