@@ -279,3 +279,77 @@ def search_query(q: str) -> List[Tuple]:
             (pattern,) * 10,
         )
         return cursor.fetchall()
+
+
+def find_duplicate_listings(
+    broker_id: int,
+    access_type: str,
+    country: str,
+    price: str,
+    description: str,
+    source: str,
+    post_date: str,
+    sector: str,
+    revenue: str,
+) -> List[Tuple]:
+    """
+    Look for listings that look like strong duplicates of a new one.
+
+    Criteria (strict match):
+      - same broker_id
+      - same access_type
+      - same country
+      - same price
+      - same source
+      - same post_date
+      - same sector
+      - same revenue
+      - same description
+
+    Returns rows in the same format as get_all_listings()
+    so print_listings() can be reused.
+    """
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                l.id,
+                b.name AS broker_name,
+                l.access_type,
+                l.country,
+                l.privilege,
+                l.price,
+                l.description,
+                l.source,
+                l.post_date,
+                l.sector,
+                l.revenue,
+                l.created_at
+            FROM listings l
+            JOIN brokers b ON l.broker_id = b.id
+            WHERE
+                l.broker_id   = ?
+            AND l.access_type = ?
+            AND l.country     = ?
+            AND l.price       = ?
+            AND l.source      = ?
+            AND l.post_date   = ?
+            AND l.sector      = ?
+            AND l.revenue     = ?
+            AND l.description = ?
+            ORDER BY l.created_at DESC
+            """,
+            (
+                broker_id,
+                access_type,
+                country,
+                price,
+                source,
+                post_date,
+                sector,
+                revenue,
+                description,
+            ),
+        )
+        return cursor.fetchall()
