@@ -124,7 +124,7 @@ def add_listing_flow() -> None:
     price = prompt("Price (e.g. 500, 0.1 BTC): ")
     description = prompt("Short description: ")
     source = prompt("Source forum (exploit/ramp/etc): ").lower()
-    post_date = prompt("Post date (free text): ")
+    post_date = prompt("Post date (YYYY-MM-DD): ")
     sector = normalize_sector(prompt("Sector (optional): "))
     revenue = normalize_revenue(prompt("Revenue (optional): "))
 
