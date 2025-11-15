@@ -353,3 +353,65 @@ def find_duplicate_listings(
             ),
         )
         return cursor.fetchall()
+
+
+def get_listing_by_id(listing_id: int) -> Optional[Tuple]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                id,
+                broker_id,
+                access_type,
+                country,
+                privilege,
+                price,
+                description,
+                source,
+                post_date,
+                sector,
+                revenue,
+                created_at
+            FROM listings
+            WHERE id = ?
+            """,
+            (listing_id,),
+        )
+        return cursor.fetchone()
+
+
+def update_listing(listing_id: int,access_type: str,country: str,privilege: str,price: str,description: str,source: str,post_date: str,sector: str,revenue: str,) -> None:
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE listings
+            SET
+                access_type = ?,
+                country     = ?,
+                privilege   = ?,
+                price       = ?,
+                description = ?,
+                source      = ?,
+                post_date   = ?,
+                sector      = ?,
+                revenue     = ?
+            WHERE id = ?
+            """,
+            (
+                access_type,
+                country,
+                privilege,
+                price,
+                description,
+                source,
+                post_date,
+                sector,
+                revenue,
+                listing_id,
+            ),
+        )
+        conn.commit()
+
