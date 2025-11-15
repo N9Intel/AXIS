@@ -2,7 +2,7 @@ import sys
 
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
-from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings
+from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id
 from datetime import datetime
 
 def validate_date(date_str: str) -> bool:
@@ -261,6 +261,137 @@ def search_query_flow() -> None:
     wait_for_enter()
 
 
+def edit_listing_flow() -> None:
+    print("\n[Edit listing]\n")
+
+    listing_id_raw = prompt("Listing ID to edit: ").strip()
+    if not listing_id_raw.isdigit():
+        print("\n[ERROR] Listing ID must be a number.\n")
+        wait_for_enter()
+        return
+
+    listing_id = int(listing_id_raw)
+    row = get_listing_by_id(listing_id)
+
+    if not row:
+        print(f"\n[ERROR] Listing with ID {listing_id} not found.\n")
+        wait_for_enter()
+        return
+
+    (
+        _id,
+        broker_id,
+        current_access_type,
+        current_country,
+        current_privilege,
+        current_price,
+        current_description,
+        current_source,
+        current_post_date,
+        current_sector,
+        current_revenue,
+        created_at,
+    ) = row
+
+    # Optional: show current broker name
+    broker_row = get_broker_by_id(broker_id) if 'get_broker_by_id' in globals() else None
+    if broker_row:
+        broker_name = broker_row[1]
+        print(f"\nEditing listing [{listing_id}] for broker: {broker_name}")
+    else:
+        print(f"\nEditing listing [{listing_id}] (broker_id={broker_id})")
+
+    print(f"Created at: {created_at}\n")
+
+    print("Press ENTER to keep existing value.\n")
+
+    new_access_type = prompt(f"Access type [{current_access_type}]: ").strip().lower()
+    if not new_access_type:
+        new_access_type = current_access_type
+
+    new_country = prompt(f"Country [{current_country}]: ").strip().upper()
+    if not new_country:
+        new_country = current_country
+
+    new_privilege = prompt(f"Privilege [{current_privilege or 'none'}]: ").strip().lower()
+    if not new_privilege:
+        new_privilege = current_privilege
+
+    new_price = prompt(f"Price [{current_price}]: ").strip()
+    if not new_price:
+        new_price = current_price
+
+    new_description = prompt(f"Description [{current_description[:40]}...]: ").strip()
+    if not new_description:
+        new_description = current_description
+
+    new_source = prompt(f"Source [{current_source}]: ").strip().lower()
+    if not new_source:
+        new_source = current_source
+
+    # Date with validation
+    while True:
+        new_post_date = prompt(f"Post date [{current_post_date}] (YYYY-MM-DD): ").strip()
+        if not new_post_date:
+            new_post_date = current_post_date
+            break
+
+        if validate_date(new_post_date):
+            break
+        else:
+            print("\n[ERROR] Invalid date format. Use YYYY-MM-DD.\n")
+
+    new_sector_raw = prompt(f"Sector [{current_sector or 'none'}]: ").strip()
+    if new_sector_raw:
+        new_sector = normalize_sector(new_sector_raw)
+    else:
+        new_sector = current_sector
+
+    new_revenue_raw = prompt(f"Revenue [{current_revenue or 'none'}]: ").strip()
+    if new_revenue_raw:
+        new_revenue = normalize_revenue(new_revenue_raw)
+    else:
+        new_revenue = current_revenue
+
+    # Basic validation again
+    if not new_access_type:
+        print("\n[ERROR] Access type cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    if not new_country:
+        print("\n[ERROR] Country cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    if not new_price:
+        print("\n[ERROR] Price cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    if not new_description:
+        print("\n[ERROR] Description cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    update_listing(
+        listing_id=listing_id,
+        access_type=new_access_type,
+        country=new_country,
+        privilege=new_privilege,
+        price=new_price,
+        description=new_description,
+        source=new_source,
+        post_date=new_post_date,
+        sector=new_sector,
+        revenue=new_revenue,
+    )
+
+    print(f"\n[OK] Updated listing [{listing_id}].\n")
+    wait_for_enter()
+
+
+
 def print_menu() -> None:
     print("AXIS v0.2 - IAB Listings")
     print("------------------------")
@@ -271,6 +402,7 @@ def print_menu() -> None:
     print("[5] Find listings by broker")
     print("[6] Find listings by sector")
     print("[7] Search (query)")
+    print("[8] Edit listing")
     print("[0] Exit")
     print()
 
@@ -295,6 +427,8 @@ def main() -> None:
             find_listings_by_sector_flow()
         elif choice == "7":
             search_query_flow()
+        elif choice == "8":
+            edit_listing_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)
