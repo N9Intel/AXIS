@@ -121,7 +121,7 @@ def add_listing_flow() -> None:
     access_type = prompt("Access type (rdp/vpn/etc): ").lower()
     country = prompt("Country (US/GB/RU/etc): ").upper()
     privilege = prompt("Privilege (admin/user, optional): ").lower()
-    price = prompt("Price (e.g. 500, 0.1 BTC): ")
+    price = prompt("Price (e.g. START 700, STEP 200, BLITZ 1900 USD): ")
     description = prompt("Short description: ")
     source = prompt("Source forum (exploit/ramp/etc): ").lower()
     post_date = prompt("Post date (YYYY-MM-DD): ")
