@@ -293,7 +293,6 @@ def search_query(q: str) -> List[Tuple]:
         cursor.execute(sql, params)
         return cursor.fetchall()
 
-
 def find_duplicate_listings(
     broker_id: int,
     access_type: str,
