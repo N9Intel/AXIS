@@ -415,3 +415,15 @@ def update_listing(listing_id: int,access_type: str,country: str,privilege: str,
         )
         conn.commit()
 
+
+def delete_listing(listing_id: int) -> None:
+    """Delete a listing by ID."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM listings WHERE id = ?",
+            (listing_id,),
+        )
+        conn.commit()
+
+
