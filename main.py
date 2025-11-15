@@ -3,6 +3,16 @@ import sys
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
 from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings
+from datetime import datetime
+
+def validate_date(date_str: str) -> bool:
+    """Return True if date is in YYYY-MM-DD format."""
+    try:
+        datetime.strptime(date_str, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
+
 
 def prompt(text: str) -> str:
     return input(text).strip()
@@ -124,7 +134,17 @@ def add_listing_flow() -> None:
     price = prompt("Price (e.g. START 700, STEP 200, BLITZ 1900 USD): ")
     description = prompt("Short description: ")
     source = prompt("Source forum (exploit/ramp/etc): ").lower()
-    post_date = prompt("Post date (YYYY-MM-DD): ")
+    while True:
+        post_date = prompt("Post date (YYYY-MM-DD): ").strip()
+        if not post_date:
+            print("\n[ERROR] Post date cannot be empty.\n")
+            continue
+
+        if validate_date(post_date):
+            break
+        else:
+            print("\n[ERROR] Invalid date format. Use YYYY-MM-DD (e.g. 2025-09-10).\n")
+
     sector = normalize_sector(prompt("Sector (optional): "))
     revenue = normalize_revenue(prompt("Revenue (optional): "))
 
