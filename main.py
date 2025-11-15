@@ -249,7 +249,7 @@ def find_listings_by_sector_flow() -> None:
 
 def search_query_flow() -> None:
     print("\n[Search]\n")
-    q = prompt("Query: ").lower().strip()
+    q = prompt("Query: ").strip()
 
     if not q:
         print("\n[ERROR] Query cannot be empty\n")
