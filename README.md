@@ -138,8 +138,6 @@ Planned improvements:
 
     Duplicate Detection
 
-    Raw vs Normalized Field Tracking
-
     Basic Analytics (tier / sector breakdown)
 
     Initial structure for real listing ingestion
