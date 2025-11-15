@@ -2,7 +2,7 @@ import sys
 
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
-from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id
+from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing
 from datetime import datetime
 
 def validate_date(date_str: str) -> bool:
@@ -391,6 +391,63 @@ def edit_listing_flow() -> None:
     wait_for_enter()
 
 
+def delete_listing_flow() -> None:
+    print("\n[Delete listing]\n")
+
+    listing_id_raw = prompt("Listing ID to delete: ").strip()
+    if not listing_id_raw.isdigit():
+        print("\n[ERROR] Listing ID must be a number.\n")
+        wait_for_enter()
+        return
+
+    listing_id = int(listing_id_raw)
+    row = get_listing_by_id(listing_id)
+
+    if not row:
+        print(f"\n[ERROR] Listing with ID {listing_id} not found.\n")
+        wait_for_enter()
+        return
+
+    (
+        _id,
+        broker_id,
+        access_type,
+        country,
+        privilege,
+        price,
+        description,
+        source,
+        post_date,
+        sector,
+        revenue,
+        created_at,
+    ) = row
+
+    print("\nYou are about to delete this listing:\n")
+    print(f"[{listing_id}] Broker ID: {broker_id}")
+    print(
+        f"    Access: {access_type or '-'} | Country: {country or '-'} | "
+        f"Privilege: {privilege or '-'}"
+    )
+    print(f"    Price: {price or '-'} | Sector: {sector or '-'} | Revenue: {revenue or '-'}")
+    print(f"    Source: {source or '-'} | Post date: {post_date or '-'}")
+    if description:
+        short_desc = description if len(description) <= 100 else description[:97] + "..."
+        print(f"    Desc: {short_desc}")
+    print(f"    Created: {created_at}\n")
+
+    choice = prompt("Type 'delete' to confirm, or press ENTER to cancel: ").strip().lower()
+    if choice != "delete":
+        print("\n[INFO] Delete cancelled.\n")
+        wait_for_enter()
+        return
+
+    delete_listing(listing_id)
+    print(f"\n[OK] Listing [{listing_id}] deleted.\n")
+    wait_for_enter()
+
+
+
 
 def print_menu() -> None:
     print("AXIS v0.2 - IAB Listings")
@@ -403,6 +460,7 @@ def print_menu() -> None:
     print("[6] Find listings by sector")
     print("[7] Search (query)")
     print("[8] Edit listing")
+    print("[9] Delete listing")
     print("[0] Exit")
     print()
 
@@ -429,6 +487,8 @@ def main() -> None:
             search_query_flow()
         elif choice == "8":
             edit_listing_flow()
+        elif choice == "9":
+            delete_listing_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)
