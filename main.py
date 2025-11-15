@@ -2,7 +2,7 @@ import sys
 
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
-from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query
+from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings
 
 def prompt(text: str) -> str:
     return input(text).strip()
@@ -147,6 +147,28 @@ def add_listing_flow() -> None:
         print("\n[ERROR] Description is required\n")
         wait_for_enter()
         return
+    
+    duplicates = find_duplicate_listings(
+        broker_id=broker_id,
+        access_type=access_type,
+        country=country,
+        price=price,
+        description=description,
+        source=source,
+        post_date=post_date,
+        sector=sector,
+        revenue=revenue,
+    )
+
+    if duplicates:
+        print("\n[WARN] Possible duplicate listing(s) found:\n")
+        print_listings(duplicates)
+
+        choice = prompt("Insert anyway? (y/N): ").lower()
+        if choice != "y":
+            print("\n[INFO] Listing was NOT saved.\n")
+            wait_for_enter()
+            return
 
     listing_id = insert_listing(
         broker_id,
