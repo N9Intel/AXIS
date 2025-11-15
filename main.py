@@ -129,7 +129,7 @@ def add_listing_flow() -> None:
     broker_id = broker_row[0]
 
     access_type = prompt("Access type (rdp/vpn/etc): ").lower()
-    country = prompt("Country (US/GB/RU/etc): ").upper()
+    country = prompt("Country (US/UK/RU/etc): ").upper()
     privilege = prompt("Privilege (admin/user, optional): ").lower()
     price = prompt("Price (e.g. START 700, STEP 200, BLITZ 1900 USD): ")
     description = prompt("Short description: ")
