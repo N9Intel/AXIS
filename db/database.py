@@ -236,48 +236,61 @@ def find_listings_by_sector(sector: str) -> List[Tuple]:
         return cursor.fetchall()
 
 def search_query(q: str) -> List[Tuple]:
-    """
-    Freeform search across broker name, access type, country, privilege,
-    price, description, source, sector, revenue, and post_date.
 
-    Returns rows in the same format as get_all_listings().
+    tokens = [t.strip().lower() for t in q.split() if t.strip()]
+    if not tokens:
+        return []
+
+    # We build a WHERE clause like:
+    # (field1 LIKE ? OR field2 LIKE ? OR ...)  AND
+    # (field1 LIKE ? OR field2 LIKE ? OR ...)  AND ...
+    field_expr = """
+        LOWER(b.name)      LIKE ?
+     OR LOWER(l.access_type) LIKE ?
+     OR LOWER(l.country)     LIKE ?
+     OR LOWER(l.privilege)   LIKE ?
+     OR LOWER(l.price)       LIKE ?
+     OR LOWER(l.description) LIKE ?
+     OR LOWER(l.source)      LIKE ?
+     OR LOWER(l.post_date)   LIKE ?
+     OR LOWER(l.sector)      LIKE ?
+     OR LOWER(l.revenue)     LIKE ?
     """
-    pattern = f"%{q.lower()}%"
+
+    where_clauses = []
+    params: list[str] = []
+
+    for token in tokens:
+        pattern = f"%{token}%"
+        where_clauses.append(f"({field_expr})")
+        # 10 fields → 10 params per token
+        params.extend([pattern] * 10)
+
+    where_sql = " AND ".join(where_clauses)
+
+    sql = f"""
+        SELECT
+            l.id,
+            b.name AS broker_name,
+            l.access_type,
+            l.country,
+            l.privilege,
+            l.price,
+            l.description,
+            l.source,
+            l.post_date,
+            l.sector,
+            l.revenue,
+            l.created_at
+        FROM listings l
+        JOIN brokers b ON l.broker_id = b.id
+        WHERE {where_sql}
+        ORDER BY l.created_at DESC
+    """
 
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT
-                l.id,
-                b.name AS broker_name,
-                l.access_type,
-                l.country,
-                l.privilege,
-                l.price,
-                l.description,
-                l.source,
-                l.post_date,
-                l.sector,
-                l.revenue,
-                l.created_at
-            FROM listings l
-            JOIN brokers b ON l.broker_id = b.id
-            WHERE
-                LOWER(b.name)      LIKE ?
-             OR LOWER(l.access_type) LIKE ?
-             OR LOWER(l.country)     LIKE ?
-             OR LOWER(l.privilege)   LIKE ?
-             OR LOWER(l.price)       LIKE ?
-             OR LOWER(l.description) LIKE ?
-             OR LOWER(l.source)      LIKE ?
-             OR LOWER(l.sector)      LIKE ?
-             OR LOWER(l.revenue)     LIKE ?
-             OR LOWER(l.post_date)   LIKE ?
-            ORDER BY l.created_at DESC
-            """,
-            (pattern,) * 10,
-        )
+        cursor.execute(sql, params)
         return cursor.fetchall()
 
 
@@ -425,5 +438,6 @@ def delete_listing(listing_id: int) -> None:
             (listing_id,),
         )
         conn.commit()
+
 
 
