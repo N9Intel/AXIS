@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
-from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing
+from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing,get_summary_counts,get_broker_listing_counts,get_sector_counts
 from datetime import datetime
 import csv
 
@@ -517,6 +517,7 @@ def export_listings_to_csv(rows: list[tuple], filename: str | None = None) -> Pa
     return export_path
 
 
+
 def export_listings_flow() -> None:
     print("\n[Export listings to CSV]\n")
     print("Choose export type:")
@@ -563,6 +564,37 @@ def export_listings_flow() -> None:
     print(f"\n[OK] Exported {len(rows)} listing(s) to {export_path}\n")
     wait_for_enter()
 
+def analytics_flow() -> None:
+    print("\n[Basic analytics]\n")
+
+    total_brokers, total_listings = get_summary_counts()
+    print(f"Total brokers:  {total_brokers}")
+    print(f"Total listings: {total_listings}\n")
+
+    # Top brokers
+    print("Top brokers by listings:")
+    broker_rows = get_broker_listing_counts(limit=10)
+    if not broker_rows:
+        print("  [No brokers]\n")
+    else:
+        for broker_name, listing_count in broker_rows:
+            tier = calculate_tier(listing_count)
+            print(f"  - {broker_name}: {listing_count} listing(s) (Tier: {tier})")
+        print()
+
+    # Sector distribution
+    print("Listings by sector:")
+    sector_rows = get_sector_counts(limit=10)
+    if not sector_rows:
+        print("  [No listings]\n")
+    else:
+        for sector, count in sector_rows:
+            print(f"  - {sector}: {count}")
+        print()
+
+    wait_for_enter()
+
+
 
 
 
@@ -579,6 +611,7 @@ def print_menu() -> None:
     print("[8] Edit listing")
     print("[9] Delete listing")
     print("[10] Export listings to CSV")
+    print("[11] Basic analytics")
     print("[0] Exit")
     print()
 
@@ -609,6 +642,8 @@ def main() -> None:
             delete_listing_flow()
         elif choice == "10":
             export_listings_flow()
+        elif choice == "11":
+            analytics_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)

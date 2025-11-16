@@ -439,4 +439,68 @@ def delete_listing(listing_id: int) -> None:
         conn.commit()
 
 
+def get_summary_counts() -> Tuple[int, int]:
+    """
+    Return (total_brokers, total_listings).
+    """
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT COUNT(*) FROM brokers")
+        total_brokers = cursor.fetchone()[0] or 0
+
+        cursor.execute("SELECT COUNT(*) FROM listings")
+        total_listings = cursor.fetchone()[0] or 0
+
+        return total_brokers, total_listings
+
+
+def get_broker_listing_counts(limit: int = 10) -> List[Tuple]:
+    """
+    Return top brokers by listing count.
+
+    Each row: (broker_name, listing_count)
+    """
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                b.name AS broker_name,
+                COUNT(l.id) AS listing_count
+            FROM brokers b
+            LEFT JOIN listings l ON l.broker_id = b.id
+            GROUP BY b.id
+            ORDER BY listing_count DESC, broker_name ASC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        return cursor.fetchall()
+
+
+def get_sector_counts(limit: int = 10) -> List[Tuple]:
+    """
+    Return top sectors by listing count (ignores empty/null sectors).
+
+    Each row: (sector, listing_count)
+    """
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                COALESCE(NULLIF(l.sector, ''), 'unknown') AS sector,
+                COUNT(*) AS listing_count
+            FROM listings l
+            GROUP BY sector
+            ORDER BY listing_count DESC, sector ASC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        return cursor.fetchall()
+
+
+
 
