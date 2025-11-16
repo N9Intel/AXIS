@@ -1,0 +1,4 @@
+id,broker,access_type,country,privilege,price,description,source,post_date,sector,revenue,created_at
+4,hydra,rdp,ES,user,"START 700, STEP 100, BLITZ 1800",ES RDP 25M,exploit,2025-07-08,manufacturing,60M,2025-11-15 12:00:59
+3,361crimelife,vpn,GB,admin,"START 600, STEP 200, BLITZ 1900 USD",vpn GB,exploit,2025-08-19,,25M,2025-11-15 11:58:37
+1,hydra,rdp,DE,admin,100,bl;lahh,exploit,2025-11-03,healthcare,25M,2025-11-14 18:17:30

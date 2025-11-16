@@ -1,9 +1,17 @@
 import sys
-
+from pathlib import Path
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
 from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing
 from datetime import datetime
+import csv
+
+EXPORTS_DIR = Path("exports")
+
+
+def ensure_exports_dir() -> None:
+    EXPORTS_DIR.mkdir(exist_ok=True)
+
 
 def validate_date(date_str: str) -> bool:
     """Return True if date is in YYYY-MM-DD format."""
@@ -293,7 +301,7 @@ def edit_listing_flow() -> None:
         created_at,
     ) = row
 
-    # Optional: show current broker name
+    
     broker_row = get_broker_by_id(broker_id) if 'get_broker_by_id' in globals() else None
     if broker_row:
         broker_name = broker_row[1]
@@ -447,6 +455,115 @@ def delete_listing_flow() -> None:
     wait_for_enter()
 
 
+def export_listings_to_csv(rows: list[tuple], filename: str | None = None) -> Path:
+    ensure_exports_dir()
+
+    if not filename:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"axis_listings_{timestamp}.csv"
+
+    export_path = EXPORTS_DIR / filename
+
+    fieldnames = [
+        "id",
+        "broker",
+        "access_type",
+        "country",
+        "privilege",
+        "price",
+        "description",
+        "source",
+        "post_date",
+        "sector",
+        "revenue",
+        "created_at",
+    ]
+
+    with export_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for (
+            listing_id,
+            broker_name,
+            access_type,
+            country,
+            privilege,
+            price,
+            description,
+            source,
+            post_date,
+            sector,
+            revenue,
+            created_at,
+        ) in rows:
+            writer.writerow(
+                {
+                    "id": listing_id,
+                    "broker": broker_name,
+                    "access_type": access_type,
+                    "country": country,
+                    "privilege": privilege,
+                    "price": price,
+                    "description": description,
+                    "source": source,
+                    "post_date": post_date,
+                    "sector": sector,
+                    "revenue": revenue,
+                    "created_at": created_at,
+                }
+            )
+
+    return export_path
+
+
+def export_listings_flow() -> None:
+    print("\n[Export listings to CSV]\n")
+    print("Choose export type:")
+    print("  [1] All listings")
+    print("  [2] By broker")
+    print("  [3] By sector")
+    print("  [4] By search query")
+    print()
+
+    choice = prompt("> ").strip()
+
+    if choice == "1":
+        rows = get_all_listings()
+    elif choice == "2":
+        broker_raw = prompt("Broker name: ")
+        broker_name = normalize_broker_name(broker_raw)
+        rows = find_listings_by_broker_name(broker_name)
+    elif choice == "3":
+        sector_raw = prompt("Sector: ")
+        sector = normalize_sector(sector_raw)
+        rows = find_listings_by_sector(sector)
+    elif choice == "4":
+        q = prompt("Query: ").strip()
+        if not q:
+            print("\n[ERROR] Query cannot be empty.\n")
+            wait_for_enter()
+            return
+        rows = search_query(q)
+    else:
+        print("\n[ERROR] Invalid choice.\n")
+        wait_for_enter()
+        return
+
+    if not rows:
+        print("\n[INFO] No rows to export for this filter.\n")
+        wait_for_enter()
+        return
+
+    filename_input = prompt("Filename (leave empty for auto): ").strip()
+    filename = filename_input or None
+
+    export_path = export_listings_to_csv(rows, filename)
+
+    print(f"\n[OK] Exported {len(rows)} listing(s) to {export_path}\n")
+    wait_for_enter()
+
+
 
 
 def print_menu() -> None:
@@ -461,6 +578,7 @@ def print_menu() -> None:
     print("[7] Search (query)")
     print("[8] Edit listing")
     print("[9] Delete listing")
+    print("[10] Export listings to CSV")
     print("[0] Exit")
     print()
 
@@ -489,6 +607,8 @@ def main() -> None:
             edit_listing_flow()
         elif choice == "9":
             delete_listing_flow()
+        elif choice == "10":
+            export_listings_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)
