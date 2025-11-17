@@ -7,10 +7,10 @@ DB_PATH = Path("axis.db") #should change to .env file
 
 
 def get_connection() -> sqlite3.Connection:
-     conn = sqlite3.connect(DB_PATH)
-     
-     conn.execute("PRAGMA foreign_keys = ON;")
-     return conn
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 
 def create_tables() -> None:
@@ -304,23 +304,7 @@ def find_duplicate_listings(
     sector: str,
     revenue: str,
 ) -> List[Tuple]:
-    """
-    Look for listings that look like strong duplicates of a new one.
-
-    Criteria (strict match):
-      - same broker_id
-      - same access_type
-      - same country
-      - same price
-      - same source
-      - same post_date
-      - same sector
-      - same revenue
-      - same description
-
-    Returns rows in the same format as get_all_listings()
-    so print_listings() can be reused.
-    """
+    
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -365,6 +349,7 @@ def find_duplicate_listings(
             ),
         )
         return cursor.fetchall()
+
 
 
 def get_listing_by_id(listing_id: int) -> Optional[Tuple]:
