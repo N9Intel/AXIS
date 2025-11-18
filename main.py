@@ -302,7 +302,7 @@ def edit_listing_flow() -> None:
     ) = row
 
     
-    broker_row = get_broker_by_id(broker_id) if 'get_broker_by_id' in globals() else None
+    broker_row = get_broker_by_id(broker_id)
     if broker_row:
         broker_name = broker_row[1]
         print(f"\nEditing listing [{listing_id}] for broker: {broker_name}")
