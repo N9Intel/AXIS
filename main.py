@@ -599,7 +599,7 @@ def analytics_flow() -> None:
 
 
 def print_menu() -> None:
-    print("AXIS v0.2 - IAB Listings")
+    print("AXIS v0.3 - IAB Listings")
     print("------------------------")
     print("[1] Add broker")
     print("[2] View brokers")
