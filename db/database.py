@@ -49,6 +49,26 @@ def create_tables() -> None:
             """
         )
 
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_brokers_name "
+            "ON brokers(name)"
+        )
+
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_listings_broker_id "
+            "ON listings(broker_id)"
+        )
+
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_listings_sector "
+            "ON listings(sector)"
+        )
+
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_listings_created_at "
+            "ON listings(created_at)"
+        )
+
         conn.commit()
 
 
