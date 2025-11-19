@@ -135,7 +135,7 @@ python3 main.py
 [10] Export listings to CSV
 [11] Basic analytics
 [0] Exit
-```bash
+```
 
 License
 MIT License
