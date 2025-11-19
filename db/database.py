@@ -43,6 +43,9 @@ def create_tables() -> None:
                 post_date TEXT,
                 sector TEXT,
                 revenue TEXT,
+                raw_title TEXT,
+                raw_text TEXT,
+                raw_url TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (broker_id) REFERENCES brokers(id) ON DELETE CASCADE
             )
