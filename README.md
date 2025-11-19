@@ -1,160 +1,161 @@
-# AXIS – Access Exchange Intelligence Service   
-### Version 0.2
+# AXIS v0.3 — IAB Intelligence Collection & Analysis Framework
 
-AXIS is a lightweight cyber intelligence tool for tracking **Initial Access Brokers (IABs)** and their access listings.  
-It provides an operator-friendly workflow for manually collecting, normalizing, and organizing intelligence from cybercrime forums.
+AXIS is a cyber intelligence framework designed for collecting, organizing, and analyzing data related to **Initial Access Broker (IAB)** activity across underground forums.  
+Version **0.3** introduces a structured relational database, a refined data model for brokers and listings, advanced search capabilities, deduplication logic, and foundational analytics.
 
-> **AXIS v0.2 focuses on database migration, data hygiene, and a clean CLI workflow.**
-
----
-
-# What’s New in v0.2
-
-## SQLite Database Backend
-
-AXIS now uses a dedicated `axis.db` SQLite datastore instead of CSV.
-
-- automatic table creation  
-- structured inserts  
-- normalized schema  
-- timestamps on every entry  
-- `axis.db` is gitignored to protect real intelligence data  
-
-This upgrade lays the foundation for analytics, automation, and ingestion in later versions.
+AXIS serves as a free, open-source foundation for analysts who track access brokers, compromised organizations, and access sale patterns on the dark web.
 
 ---
 
-## Interactive CLI Interface
+## Overview
 
-AXIS v0.2 introduces a simple, operator-friendly menu:
+AXIS provides a structured workflow for analysts to:
 
-[1] Add listing
-[2] View all listings
-[3] Find listings by broker
-[4] Find listings by tier
-[5] Find listings by sector
-[0] Exit
+- Maintain a centralized catalog of **brokers** and their historical activity.
+- Record and normalize **access listings** with consistent metadata.
+- Query, search, and filter listings using multiple methods.
+- Export structured intelligence for reporting or external analysis.
+- Perform basic analytics to understand broker activity and sector distribution.
 
-
-The tool is optimized for manual HUMINT-style collection of broker information.
+The system is built around **SQLite**, ensuring portability and reliability while keeping deployment simple.
 
 ---
 
-## Normalization v2
+## Key Features (v0.3)
 
-To ensure cleaner, more reliable intelligence, AXIS v0.2 includes strong normalization for all key fields.
-
----
-
-### **Broker Name Normalization**
-
-- lowercase + trimmed  
-- junk characters removed (emojis, symbols, punctuation)  
-- preserves `.`, `_`, `-`  
-- collapses extra spaces  
-
-**Examples:**  
-- `"SSR-market🔥"` → `ssr-market`  
-- `"xx_dead@crew_xx"` → `xx_deadcrew_xx`
+### 1. Broker Management
+- Add, view, and retrieve brokers.
+- Normalization of broker names for consistency.
+- Support for analyst notes per broker.
+- Automatic timestamping.
 
 ---
 
-### **Sector Mapping (Canonical Sectors)**
+### 2. Structured Listings Model
+Each listing is linked to a broker and includes:
 
-Common sector labels are normalized and mapped:
-
-| Input Variants | Canonical |
-|----------------|-----------|
-| gov, govt, public sector | government |
-| edu, school, university | education |
-| health, medical, hospital | healthcare |
-| fin, bank, banking | finance |
-| tech, it | technology |
-
-Unknown sectors remain normalized but unmapped.
-
----
-
-### **Revenue Normalization**
-
-Strong parsing of messy revenue formats:
-
-- removes `$`, `USD`, `US$`  
-- `MILLION → M`  
-- `THOUSAND → K`  
-- `BILLION → B`  
-- normalizes separators:
-  - `10 - 25m` → `10-25M`
-  - `$10 TO 25m` → `10-25M`
-  - `300 thousand` → `300K`
+- Access type (e.g., RDP, VPN, Citrix)
+- Country (ISO-like format)
+- Privilege level (admin/user)
+- Pricing data (start/step/blitz or fixed)
+- Description of the access
+- Source forum
+- Post date (validated, `YYYY-MM-DD`)
+- Sector (normalized)
+- Revenue range (normalized)
+- Automatic deduplication checks
+- Automatic timestamping
 
 ---
 
-## Tier Classification
+### 3. Advanced Search (Free-Form Query Engine)
+AXIS includes a multi-field search mechanism:
 
-AXIS categorizes brokers based on total listing count:
+- Matches across all listing fields.
+- Multiple-term matching (logical AND).
 
-| Listings | Tier |
-|----------|------|
-| ≥ 50 | High |
-| 10–49 | Medium |
-| 0–9 | Low |
-
-This allows for structured filtering and basic capability assessment.
 
 ---
 
-# Validation & Error Handling
+### 4. Deduplication Engine
+AXIS detects potential duplicate listings using:
 
-AXIS v0.2 includes improved input safety:
+- Broker match  
+- Access type  
+- Country  
+- Pricing  
+- Description  
+- Source  
+- Post date  
+- Sector  
+- Revenue  
 
-- broker, sector, and revenue fields must not be empty  
-- listing count must be a non-negative integer  
-- invalid tier searches return clean errors  
-- database issues handled gracefully  
-- Ctrl+C clean exit support  
+Users are warned before inserting duplicates.
 
+---
 
-# 🪜 Installation & Usage
+### 5. Editing and Deleting Listings
+- Update any field of an existing listing.
+- Delete listings safely using the listing ID.
 
-### Clone the Repository
+---
 
+### 6. CSV Export System
+Export listings to CSV with filtering options:
+
+- All listings  
+- By broker  
+- By sector  
+- By free-form query  
+
+Exports are stored in `exports/`.
+
+---
+
+### 7. Basic Analytics
+Provides statistical insight into IAB activity:
+
+- Total brokers  
+- Total listings  
+- Top brokers by listing count  
+- Broker tier classification (High / Medium / Low)  
+- Sector distribution  
+
+---
+
+### 8. Enhanced Normalization Engine
+Improved normalization for:
+
+- Broker names  
+- Revenue ranges  
+- Sectors (including dozens of real-world industries)
+
+---
+
+## Installation
+
+### Requirements
+- Python 3.10+
+
+### Setup
 ```bash
-git clone https://github.com/N9Intel/AXIS.git
+git clone https://github.com/<youruser>/AXIS.git
 cd AXIS
-
-Run AXIS
-
 python3 main.py
 
-AXIS will automatically set up the database on first launch.
-Roadmap – v0.3 and Beyond
+[1] Add broker
+[2] View brokers
+[3] Add listing
+[4] View listings
+[5] Find listings by broker
+[6] Find listings by sector
+[7] Search (query)
+[8] Edit listing
+[9] Delete listing
+[10] Export listings to CSV
+[11] Basic analytics
+[0] Exit
 
-Planned improvements:
+License
+MIT License
 
-    Query Search (freeform search across all fields)
+Copyright (c) 2025 N9 Intelligence
 
-    Edit / Update Existing Listings
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    Duplicate Detection
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-    Basic Analytics (tier / sector breakdown)
-
-    Initial structure for real listing ingestion
-
-    Export results to CSV
-
-    Delete listings
-
-    
-
-AXIS v0.2 is the foundation for deeper intelligence automation coming in v0.3+.
-
-
-MIT License — see the LICENSE file for full terms.
-
-Progress updates & discussions posted on Twitter/X:
-(@N9intel)
-
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
