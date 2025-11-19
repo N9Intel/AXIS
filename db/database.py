@@ -141,7 +141,16 @@ def insert_listing(
     post_date: str,
     sector: str,
     revenue: str,
+    raw_title: str = "",
+    raw_text: str = "",
+    raw_url: str = "",
 ) -> int:
+    """
+    Insert a listing.
+
+    raw_title/raw_text/raw_url are new in v0.4. Existing callers can ignore them;
+    they default to empty strings for backward compatibility.
+    """
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -156,9 +165,12 @@ def insert_listing(
                 source,
                 post_date,
                 sector,
-                revenue
+                revenue,
+                raw_title,
+                raw_text,
+                raw_url
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 broker_id,
@@ -171,10 +183,14 @@ def insert_listing(
                 post_date,
                 sector,
                 revenue,
+                raw_title,
+                raw_text,
+                raw_url,
             ),
         )
         conn.commit()
         return cursor.lastrowid
+
 
 
 def get_all_listings() -> List[Tuple]:
