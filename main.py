@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
+from utils.parse import suggest_listing_fields
 from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing,get_summary_counts,get_broker_listing_counts,get_sector_counts
 from datetime import datetime
 import csv
@@ -640,29 +641,47 @@ def add_raw_listing_flow() -> None:
         return
 
     # --- Structured fields (manual for now) ---
-    print("\n[Structured fields]\n")
+        # --- Structured fields (parser suggestions + edit) ---
+    print("\n[Parser suggestions]\n")
+    suggested = suggest_listing_fields(raw_title, raw_text)
+    for key, value in suggested.items():
+        print(f"{key}: {value}")
+    print()
 
-    access_type = prompt("Access type (rdp/vpn/etc): ").lower()
-    country = prompt("Country (US/GB/RU/etc): ").upper()
-    privilege = prompt("Privilege (admin/user, optional): ").lower()
-    price = prompt("Price (e.g. START 700, STEP 200, BLITZ 1900 USD): ")
-    description = prompt("Short description: ")
-    source = prompt("Source forum (exploit/ramp/etc): ").lower()
+    def ask(field: str, default: str = "") -> str:
+        """
+        Prompt with an optional default. If user presses ENTER, keep default.
+        """
+        if default:
+            answer = prompt(f"{field} [{default}]: ")
+            return answer if answer else default
+        else:
+            return prompt(f"{field}: ")
 
-    # Date validation (reuse validate_date)
+    access_type = ask("Access type (rdp/vpn/etc)", suggested.get("access_type", "")).lower()
+    country = ask("Country (US/GB/RU/etc)", suggested.get("country", "")).upper()
+    privilege = ask("Privilege (admin/user, optional)", suggested.get("privilege", "")).lower()
+    price = ask("Price", suggested.get("price", ""))
+    description = ask("Short description", suggested.get("description", ""))
+    source = ask("Source forum (exploit/ramp/etc)").lower()
+
+    # Post date with validation, using parser suggestion as default
     while True:
-        post_date = prompt("Post date (YYYY-MM-DD): ").strip()
-        if not post_date:
+        post_date_input = ask("Post date (YYYY-MM-DD)", suggested.get("post_date", ""))
+        post_date_input = post_date_input.strip()
+        if not post_date_input:
             print("\n[ERROR] Post date cannot be empty.\n")
             continue
 
-        if validate_date(post_date):
+        if validate_date(post_date_input):
+            post_date = post_date_input
             break
         else:
             print("\n[ERROR] Invalid date format. Use YYYY-MM-DD (e.g. 2025-09-10).\n")
 
-    sector = normalize_sector(prompt("Sector (optional): "))
-    revenue = normalize_revenue(prompt("Revenue (optional): "))
+    sector = normalize_sector(ask("Sector (optional)", suggested.get("sector", "")))
+    revenue = normalize_revenue(ask("Revenue (optional)", suggested.get("revenue", "")))
+
 
     # --- Basic validation (same rules as normal add_listing_flow) ---
     if not access_type:
