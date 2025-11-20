@@ -1,5 +1,5 @@
 import re
-from utils.normalize import normalize_sector, normalize_revenue
+from utils.normalize import normalize_sector, normalize_revenue, SECTOR_MAP
 
 # -----------------------------------------
 #  ACCESS TYPE SUGGESTION
@@ -115,8 +115,15 @@ def suggest_price(text: str) -> str:
 # -----------------------------------------
 
 def suggest_revenue(text: str) -> str:
+    low = text.lower()
+
+    kk_match = re.search(r"\b(\d+)\s*kk\b", low, flags=re.IGNORECASE)
+    if kk_match:
+        num = kk_match.group(1)
+        return normalize_revenue(f"{num}M")
+
     rev_line = re.search(
-        r"revenue[:\s$]+([\d.,]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
+        r"revenue\s*[:\-]*\s*[<\$\s]*([\d.,]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
         text,
         flags=re.IGNORECASE,
     )
@@ -125,14 +132,13 @@ def suggest_revenue(text: str) -> str:
         num = num.replace(",", "")
         return normalize_revenue(f"{num}{unit}")
 
-    # Fallback: any mention of N M/MILLION/B/BILLION/K/THOUSAND
-    match = re.search(
+    generic = re.search(
         r"([\d.]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
         text,
         flags=re.IGNORECASE,
     )
-    if match:
-        num, unit = match.groups()
+    if generic:
+        num, unit = generic.groups()
         num = num.replace(",", "")
         return normalize_revenue(f"{num}{unit}")
 
@@ -142,19 +148,23 @@ def suggest_revenue(text: str) -> str:
 #  SECTOR SUGGESTION
 # -----------------------------------------
 
-POSSIBLE_SECTORS = [
-    "government", "education", "healthcare", "finance", "technology", "manufacturing",
-    "energy", "logistics", "construction", "insurance", "retail", "e-commerce",
-    "hospitality", "media", "agriculture", "legal", "accounting",
-]
-
 def suggest_sector(text: str) -> str:
     low = text.lower()
-    for sector in POSSIBLE_SECTORS:
-        if sector.lower() in low:
-            return normalize_sector(sector)
-    return ""
 
+    # 1) Prefer explicit "Industry: ..." style hints
+    industry_line = re.search(r"industry[:\s]+(.+)", low)
+    if industry_line:
+        industry_val = industry_line.group(1)
+        for key in SECTOR_MAP.keys():
+            if key in industry_val:
+                return normalize_sector(key)
+
+    # 2) Fallback: scan whole text for any sector keyword
+    for key in SECTOR_MAP.keys():
+        if key in low:
+            return normalize_sector(key)
+
+    return ""
 
 # -----------------------------------------
 #  POST DATE SUGGESTION
