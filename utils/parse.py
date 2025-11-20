@@ -73,38 +73,77 @@ def suggest_privilege(text: str) -> str:
 # -----------------------------------------
 
 def suggest_price(text: str) -> str:
+    """
+    Try to extract pricing info from the text.
 
-    low = text.lower()
+    Priority:
+    1. START / STEP / BLITZ lines
+    2. Lines explicitly mentioning 'price'
+    We ignore random numbers on non-price lines (e.g. code=1014, host=+1000).
+    """
+    lines = text.splitlines()
+    tiers: list[str] = []
+    loose_prices: list[str] = []
 
-    tiers = []
+    for line in lines:
+        low = line.lower()
 
-    start_match = re.search(r"start[:\s]+\$?\s*(\d+)", low, flags=re.IGNORECASE)
-    if start_match:
-        tiers.append(f"START {start_match.group(1)}")
+        # Skip empty / near-empty lines
+        if not low.strip():
+            continue
 
-    step_match = re.search(r"step[:\s]+\$?\s*(\d+)", low, flags=re.IGNORECASE)
-    if step_match:
-        tiers.append(f"STEP {step_match.group(1)}")
+        # ---------------------------------
+        # 1) START / STEP / BLITZ patterns
+        # ---------------------------------
+        if any(k in low for k in ("start", "step", "blitz")):
+            start_match = re.search(r"start[:=\s]+\$?\s*([\d,]+)", low, flags=re.IGNORECASE)
+            if start_match:
+                tiers.append(f"START {start_match.group(1).replace(',', '')}")
 
-    blitz_match = re.search(r"blitz[:\s]+\$?\s*(\d+)", low, flags=re.IGNORECASE)
-    if blitz_match:
-        tiers.append(f"BLITZ {blitz_match.group(1)}")
+            step_match = re.search(r"step[:=\s]+\$?\s*([\d,]+)", low, flags=re.IGNORECASE)
+            if step_match:
+                tiers.append(f"STEP {step_match.group(1).replace(',', '')}")
 
+            blitz_match = re.search(r"blitz[:=\s]+\$?\s*([\d,]+)", low, flags=re.IGNORECASE)
+            if blitz_match:
+                tiers.append(f"BLITZ {blitz_match.group(1).replace(',', '')}")
+
+            continue  # done with this line
+
+        # ---------------------------------
+        # 2) Generic "price" lines
+        #    e.g. "price is 1400$", "price: 900 usd"
+        # ---------------------------------
+        if "price" in low:
+            # find numbers on this line that look like prices
+            candidates = re.findall(
+                r"\$?\s*([\d][\d.,]*)\s*(usd)?",
+                line,
+                flags=re.IGNORECASE,
+            )
+            for num, _ in candidates:
+                # check context around the number to avoid revenue-like "28m", "5 million"
+                context_pattern = rf"{re.escape(num)}\s*(m|million|b|billion|k|thousand)"
+                if re.search(context_pattern, line, flags=re.IGNORECASE):
+                    continue  # looks more like revenue, skip
+
+                cleaned = num.replace(",", "")
+                loose_prices.append(cleaned)
+
+    # If we got any tiered prices, return them joined
     if tiers:
         return ", ".join(tiers)
 
-    candidates = re.findall(
-        r"\$?\s?(\d+)\s?(?:usd)?\b", text, flags=re.IGNORECASE
-    )
-
-    prices = []
-    for c in candidates:
-        pattern = rf"\$?\s?{c}\s?(usd|usd\.|dollars|million|m\b)"
-        if not re.search(pattern, text, flags=re.IGNORECASE):
-            prices.append(c)
-
-    if prices:
-        return ", ".join(prices[:3])
+    # Otherwise, if we found price values from 'price' lines, return first few
+    if loose_prices:
+        # Deduplicate while preserving order
+        seen = set()
+        unique = []
+        for p in loose_prices:
+            if p not in seen:
+                seen.add(p)
+                unique.append(p)
+        return ", ".join(unique[:3])
 
     return ""
 
