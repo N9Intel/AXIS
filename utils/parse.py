@@ -73,11 +73,41 @@ def suggest_privilege(text: str) -> str:
 # -----------------------------------------
 
 def suggest_price(text: str) -> str:
-    # Extract common START/STEP/BLITZ formats
-    match = re.findall(r"(START\s*\d+|STEP\s*\d+|BLITZ\s*\d+|\$\s?\d+|\d+\s?USD)", text, flags=re.IGNORECASE)
-    if match:
-        return ", ".join(m.strip() for m in match)
+
+    low = text.lower()
+
+    tiers = []
+
+    start_match = re.search(r"start[:\s]+\$?\s*(\d+)", low, flags=re.IGNORECASE)
+    if start_match:
+        tiers.append(f"START {start_match.group(1)}")
+
+    step_match = re.search(r"step[:\s]+\$?\s*(\d+)", low, flags=re.IGNORECASE)
+    if step_match:
+        tiers.append(f"STEP {step_match.group(1)}")
+
+    blitz_match = re.search(r"blitz[:\s]+\$?\s*(\d+)", low, flags=re.IGNORECASE)
+    if blitz_match:
+        tiers.append(f"BLITZ {blitz_match.group(1)}")
+
+    if tiers:
+        return ", ".join(tiers)
+
+    candidates = re.findall(
+        r"\$?\s?(\d+)\s?(?:usd)?\b", text, flags=re.IGNORECASE
+    )
+
+    prices = []
+    for c in candidates:
+        pattern = rf"\$?\s?{c}\s?(usd|usd\.|dollars|million|m\b)"
+        if not re.search(pattern, text, flags=re.IGNORECASE):
+            prices.append(c)
+
+    if prices:
+        return ", ".join(prices[:3])
+
     return ""
+
 
 
 # -----------------------------------------
@@ -85,12 +115,28 @@ def suggest_price(text: str) -> str:
 # -----------------------------------------
 
 def suggest_revenue(text: str) -> str:
-    match = re.search(r"(\d+)\s?(M|MILLION|B|BILLION)", text, flags=re.IGNORECASE)
-    if match:
-        val, unit = match.groups()
-        return normalize_revenue(f"{val}{unit}")
-    return ""
+    rev_line = re.search(
+        r"revenue[:\s$]+([\d.,]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if rev_line:
+        num, unit = rev_line.groups()
+        num = num.replace(",", "")
+        return normalize_revenue(f"{num}{unit}")
 
+    # Fallback: any mention of N M/MILLION/B/BILLION/K/THOUSAND
+    match = re.search(
+        r"([\d.]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        num, unit = match.groups()
+        num = num.replace(",", "")
+        return normalize_revenue(f"{num}{unit}")
+
+    return ""
 
 # -----------------------------------------
 #  SECTOR SUGGESTION
