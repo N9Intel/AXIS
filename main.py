@@ -595,6 +595,141 @@ def analytics_flow() -> None:
     wait_for_enter()
 
 
+def add_raw_listing_flow() -> None:
+    print("\n[Add listing from raw post]\n")
+
+    # --- Broker resolution ---
+    broker_raw = prompt("Broker name (must already exist): ")
+    broker_name = normalize_broker_name(broker_raw)
+
+    if not broker_name:
+        print("\n[ERROR] Broker name cannot be empty\n")
+        wait_for_enter()
+        return
+
+    broker_row = find_broker_by_name(broker_name)
+    if not broker_row:
+        print(f"\n[ERROR] Broker '{broker_name}' not found. Add it first using option [1].\n")
+        wait_for_enter()
+        return
+
+    broker_id = broker_row[0]
+
+    # --- Raw fields ---
+    raw_title = prompt("Raw title (as shown on forum): ")
+    raw_url = prompt("Source URL (optional): ")
+
+    print("\nPaste raw post text below.")
+    print("End input with a single line containing only a single dot: '.'\n")
+
+    raw_lines: list[str] = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        if line.strip() == ".":
+            break
+        raw_lines.append(line)
+
+    raw_text = "\n".join(raw_lines).strip()
+
+    if not raw_text:
+        print("\n[ERROR] Raw post text cannot be empty.\n")
+        wait_for_enter()
+        return
+
+    # --- Structured fields (manual for now) ---
+    print("\n[Structured fields]\n")
+
+    access_type = prompt("Access type (rdp/vpn/etc): ").lower()
+    country = prompt("Country (US/GB/RU/etc): ").upper()
+    privilege = prompt("Privilege (admin/user, optional): ").lower()
+    price = prompt("Price (e.g. START 700, STEP 200, BLITZ 1900 USD): ")
+    description = prompt("Short description: ")
+    source = prompt("Source forum (exploit/ramp/etc): ").lower()
+
+    # Date validation (reuse validate_date)
+    while True:
+        post_date = prompt("Post date (YYYY-MM-DD): ").strip()
+        if not post_date:
+            print("\n[ERROR] Post date cannot be empty.\n")
+            continue
+
+        if validate_date(post_date):
+            break
+        else:
+            print("\n[ERROR] Invalid date format. Use YYYY-MM-DD (e.g. 2025-09-10).\n")
+
+    sector = normalize_sector(prompt("Sector (optional): "))
+    revenue = normalize_revenue(prompt("Revenue (optional): "))
+
+    # --- Basic validation (same rules as normal add_listing_flow) ---
+    if not access_type:
+        print("\n[ERROR] Access type is required\n")
+        wait_for_enter()
+        return
+
+    if not country:
+        print("\n[ERROR] Country is required\n")
+        wait_for_enter()
+        return
+
+    if not price:
+        print("\n[ERROR] Price is required\n")
+        wait_for_enter()
+        return
+
+    if not description:
+        print("\n[ERROR] Description is required\n")
+        wait_for_enter()
+        return
+
+    # --- Deduplication check (uses structured fields) ---
+    duplicates = find_duplicate_listings(
+        broker_id=broker_id,
+        access_type=access_type,
+        country=country,
+        price=price,
+        description=description,
+        source=source,
+        post_date=post_date,
+        sector=sector,
+        revenue=revenue,
+    )
+
+    if duplicates:
+        print("\n[WARN] Possible duplicate listing(s) found:\n")
+        print_listings(duplicates)
+
+        choice = prompt("Insert anyway? (y/N): ").lower()
+        if choice != "y":
+            print("\n[INFO] Listing was NOT saved.\n")
+            wait_for_enter()
+            return
+
+    # --- Insert with raw fields ---
+    listing_id = insert_listing(
+        broker_id=broker_id,
+        access_type=access_type,
+        country=country,
+        privilege=privilege,
+        price=price,
+        description=description,
+        source=source,
+        post_date=post_date,
+        sector=sector,
+        revenue=revenue,
+        raw_title=raw_title,
+        raw_text=raw_text,
+        raw_url=raw_url,
+    )
+
+    print(f"\n[OK] Added listing with ID {listing_id} (raw + structured saved).\n")
+    wait_for_enter()
+
+
+
 
 
 
@@ -612,6 +747,7 @@ def print_menu() -> None:
     print("[9] Delete listing")
     print("[10] Export listings to CSV")
     print("[11] Basic analytics")
+    print("[12] Add listing from raw post")
     print("[0] Exit")
     print()
 
@@ -644,6 +780,8 @@ def main() -> None:
             export_listings_flow()
         elif choice == "11":
             analytics_flow()
+        elif choice == "12":
+            add_raw_listing_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)
