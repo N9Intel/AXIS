@@ -30,6 +30,11 @@ def create_tables() -> None:
         )
 
         cursor.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ux_brokers_name "
+            "ON brokers(name)"
+        )
+
+        cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS listings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
