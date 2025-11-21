@@ -50,7 +50,7 @@ ISO_COUNTRY_CODES = {
 }
 
 COUNTRY_ALIAS = {
-    "US": ["us", "usa", "u.s.", "u.s", "america", "american", "murica", "🇺🇸"],
+    "US": ["usa", "u.s.", "u.s", "america", "american", "murica", "🇺🇸"],
     "GB": ["uk", "gb", "england", "britain", "brits", "🇬🇧"],
     "RU": ["ru", "russia", "russian", "rf", "rossiya", "🇷🇺"],
     "UA": ["ua", "ukraine", "ukrainian", "🇺🇦"],
@@ -66,60 +66,306 @@ COUNTRY_ALIAS = {
 }
 
 KEYWORD_COUNTRY_MAP = {
-    "US": ["united states", "america", "yank", "yanks", "states"],
-    "GB": ["united kingdom", "england", "britain"],
-    "DE": ["germany", "deutschland", "deutsch"],
-    "ES": ["spain", "españa"],
-    "FR": ["france"],
-    "RU": ["russia", "rossiya"],
-    "CN": ["china", "prc"],
-    "IN": ["india", "bharat"],
-    "BR": ["brazil", "brasil"],
-    "AU": ["australia"],
-    "CA": ["canada"],
-    "MX": ["mexico"],
+    "US": [
+        "united states", "america", "american", "yanks", "yankee",
+        "murica", "states"
+    ],
+    "GB": [
+        "united kingdom", "britain", "great britain", "england",
+        "scotland", "wales", "british", "uk"
+    ],
+    "NL": [
+        "netherlands", "holland", "dutch"
+    ],
+    "DE": [
+        "germany", "deutsch", "deutschland", "german"
+    ],
+    "FR": [
+        "france", "french", "republique francaise"
+    ],
+    "ES": [
+        "spain", "españa", "spanish"
+    ],
+    "IT": [
+        "italy", "italian", "italia"
+    ],
+    "PL": [
+        "poland", "polish"
+    ],
+    "SE": [
+        "sweden", "swedish", "sverige"
+    ],
+    "NO": [
+        "norway", "norwegian", "norge"
+    ],
+    "DK": [
+        "denmark", "danish", "dansk"
+    ],
+    "FI": [
+        "finland", "finnish", "suomi"
+    ],
+    "RU": [
+        "russia", "russian", "rossiya", "rf", "moscow"
+    ],
+    "UA": [
+        "ukraine", "ukrainian", "kyiv", "kiev"
+    ],
+    "BY": [
+        "belarus", "belarussian", "belorussia"
+    ],
+    "RO": [
+        "romania", "romanian"
+    ],
+    "BG": [
+        "bulgaria", "bulgarian"
+    ],
+    "GR": [
+        "greece", "greek", "hellas"
+    ],
+    "PT": [
+        "portugal", "portuguese"
+    ],
+    "CZ": [
+        "czech", "czechia"
+    ],
+    "SK": [
+        "slovakia", "slovak"
+    ],
+    "HU": [
+        "hungary", "hungarian", "magyar"
+    ],
+    "CH": [
+        "switzerland", "swiss"
+    ],
+    "AT": [
+        "austria", "austrian"
+    ],
+    "BE": [
+        "belgium", "belgian"
+    ],
+    "IE": [
+        "ireland", "irish", "eire"
+    ],
+    "IS": [
+        "iceland", "icelandic"
+    ],
+    "CA": [
+        "canada", "canadian"
+    ],
+    "MX": [
+        "mexico", "mexican"
+    ],
+    "BR": [
+        "brazil", "brasil", "brazilian"
+    ],
+    "AR": [
+        "argentina", "argentinian"
+    ],
+    "CL": [
+        "chile", "chilean"
+    ],
+    "CO": [
+        "colombia", "colombian"
+    ],
+    "PE": [
+        "peru", "peruvian"
+    ],
+    "VE": [
+        "venezuela", "venezuelan"
+    ],
+    "EC": [
+        "ecuador", "ecuadorian"
+    ],
+    "UY": [
+        "uruguay", "uruguayan"
+    ],
+    "AU": [
+        "australia", "aussie", "australian"
+    ],
+    "NZ": [
+        "new zealand", "kiwi"
+    ],
+    "JP": [
+        "japan", "japanese", "nippon"
+    ],
+    "KR": [
+        "south korea", "korean", "republic of korea"
+    ],
+    "KP": [
+        "north korea", "dprk"
+    ],
+    "CN": [
+        "china", "chinese", "prc", "peoples republic of china"
+    ],
+    "TW": [
+        "taiwan", "taiwanese", "roc"
+    ],
+    "SG": [
+        "singapore", "singaporean"
+    ],
+    "IN": [
+        "india", "indian", "bharat"
+    ],
+    "PK": [
+        "pakistan", "pakistani"
+    ],
+    "BD": [
+        "bangladesh", "bangladeshi"
+    ],
+    "LK": [
+        "sri lanka", "ceylon"
+    ],
+    "PH": [
+        "philippines", "filipino"
+    ],
+    "ID": [
+        "indonesia", "indonesian"
+    ],
+    "MY": [
+        "malaysia", "malaysian"
+    ],
+    "TH": [
+        "thailand", "thai"
+    ],
+    "VN": [
+        "vietnam", "vietnamese"
+    ],
+    "TR": [
+        "turkey", "turkish", "türkiye"
+    ],
+    "AE": [
+        "uae", "united arab emirates", "emirati", "dubai", "abu dhabi"
+    ],
+    "SA": [
+        "saudi arabia", "saudi"
+    ],
+    "IR": [
+        "iran", "persian", "tehran"
+    ],
+    "IQ": [
+        "iraq", "iraqi"
+    ],
+    "IL": [
+        "israel", "israeli"
+    ],
+    "EG": [
+        "egypt", "egyptian"
+    ],
+    "ZA": [
+        "south africa", "south african"
+    ],
+    "NG": [
+        "nigeria", "nigerian"
+    ],
+    "KE": [
+        "kenya", "kenyan"
+    ],
+    "UG": [
+        "uganda", "ugandan"
+    ],
+    "TZ": [
+        "tanzania", "tanzanian"
+    ],
+    "ET": [
+        "ethiopia", "ethiopian"
+    ],
+    "GH": [
+        "ghana", "ghanaian"
+    ],
+    "DZ": [
+        "algeria", "algerian"
+    ],
+    "MA": [
+        "morocco", "moroccan"
+    ],
+    "TN": [
+        "tunisia", "tunisian"
+    ],
+    "LY": [
+        "libya", "libyan"
+    ],
 }
 
-def suggest_country(text: str) -> str:
-    raw = text
-    low = text.lower()
 
-    m = re.search(r"[\[\(\{]([A-Z]{2})[\]\)\}]", raw)
-    if m:
-        code = m.group(1)
-        if code in ISO_COUNTRY_CODES:
-            return code
+def suggest_country(text: str, title: str = "") -> str:
+    """
+    Detect country as ISO alpha-2.
+    Prefers title, then full text.
+    Uses:
+      - [US]/(GB)/{RU} style tags
+      - standalone ISO tokens (US, DE, FR)
+      - KEYWORD_COUNTRY_MAP (full names, demonyms, slang)
+      - COUNTRY_ALIAS (slang, emojis, abbreviations)
+    """
 
-    tokens = re.findall(r"\b([A-Z]{2})\b", raw)
-    for tok in tokens:
-        if tok in ISO_COUNTRY_CODES:
-            return tok
+    def _scan_scope(raw: str) -> str:
+        low = raw.lower()
 
-    for code, aliases in COUNTRY_ALIAS.items():
-        for a in aliases:
-            if a in low:
+        m = re.search(r"[\[\(\{]([A-Z]{2})[\]\)\}]", raw)
+        if m:
+            code = m.group(1)
+            if code in ISO_COUNTRY_CODES:
                 return code
 
-    for code, words in KEYWORD_COUNTRY_MAP.items():
-        for w in words:
-            if w in low:
-                return code
 
-    return ""
+        tokens = re.findall(r"\b([A-Z]{2})\b", raw)
+        for tok in tokens:
+            if tok in ISO_COUNTRY_CODES:
+                return tok
+
+        
+        for code, words in KEYWORD_COUNTRY_MAP.items():
+            for w in words:
+                if w in low:
+                    return code
+                
+        for code, aliases in COUNTRY_ALIAS.items():
+            for a in aliases:
+                if re.search(r"\W", a):
+                    if a in raw:
+                        return code
+                else:
+                    if re.search(rf"\b{re.escape(a.lower())}\b", low):
+                        return code
+
+        return ""
+
+    if title:
+        hit = _scan_scope(title)
+        if hit:
+            return hit
+
+    return _scan_scope(text)
 
 
 def suggest_privilege(text: str) -> str:
     low = text.lower()
+
     if re.search(r"\bno\s+(domain\s+admin|da|admin)\b", low):
         return ""
-    if re.search(r"\b(domain\s+admin|da\s+access|da\b)\b", low):
-        return "admin"
-    if re.search(r"\badmin(istrator)?\b", low):
-        return "admin"
-    if re.search(r"\buser\b", low):
-        return "user"
-    return ""
 
+    privs: list[str] = []
+
+    if re.search(r"\bdomain\s+admin\b", low) or re.search(r"\bda\b", low):
+        privs.append("domain admin")
+
+    if re.search(r"\blocal\s+admin\b", low):
+        privs.append("local admin")
+
+    if not any(p in ("domain admin", "local admin") for p in privs) and re.search(r"\badmin(istrator)?\b", low):
+        privs.append("admin")
+
+    if re.search(r"\buser\b", low):
+        privs.append("user")
+
+    seen = set()
+    unique = []
+    for p in privs:
+        if p not in seen:
+            seen.add(p)
+            unique.append(p)
+
+    return ", ".join(unique) if unique else ""
 
 PRICE_NUMBER_RE = re.compile(
     r"\$?\s*([\d][\d.,]*)\s*(usd|eur|usd\.?|eur\.?)?",
@@ -187,25 +433,43 @@ def suggest_revenue(text: str) -> str:
 
     kk_match = re.search(r"\b(\d+)\s*kk\b", low)
     if kk_match:
-        return normalize_revenue(f"{kk_match.group(1)}M")
+        num = kk_match.group(1)
+        return normalize_revenue(f"{num}M")
 
-    rev_line = re.search(
-        r"(revenue|turnover|income)\s*[:\-]*\s*[<\$\s]*([\d.,]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
-        text, flags=re.IGNORECASE,
+    range_match = re.search(
+        r"([\d.,]+)\s*[-–]\s*([\d.,]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
+        text,
+        flags=re.IGNORECASE,
     )
-    if rev_line:
-        _, num, unit = rev_line.groups()
-        return normalize_revenue(f"{num.replace(',', '')}{unit}")
+    if range_match:
+        lo, hi, unit = range_match.groups()
+        lo_clean = lo.replace(",", "")
+        hi_clean = hi.replace(",", "")
+        unit_clean = unit.strip().upper()[0]
+        return f"{lo_clean}-{hi_clean}{unit_clean}"
+
+    single = re.search(
+        r"(revenue|turnover|income)\s*[:\-]*\s*[<\$\s]*([\d.,]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if single:
+        _, num, unit = single.groups()
+        num_clean = num.replace(",", "")
+        return normalize_revenue(f"{num_clean}{unit}")
 
     generic = re.search(
-        r"([\d.]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)",
-        text, flags=re.IGNORECASE,
+        r"\b([\d.]+)\s*(M|MILLION|K|THOUSAND|B|BILLION)\b",
+        text,
+        flags=re.IGNORECASE,
     )
     if generic:
         num, unit = generic.groups()
-        return normalize_revenue(f"{num.replace(',', '')}{unit}")
+        num_clean = num.replace(",", "")
+        return normalize_revenue(f"{num_clean}{unit}")
 
     return ""
+
 
 
 def suggest_sector(text: str, title: str = "") -> str:
@@ -276,9 +540,11 @@ def _build_description(title: str, text: str, max_len: int = 200) -> str:
 
 def suggest_listing_fields(raw_title: str, raw_text: str) -> Dict[str, Any]:
     combined = f"{raw_title}\n{raw_text}"
+    country = suggest_country(combined, title=raw_title)
+
     return {
         "access_type": suggest_access_type(combined, title=raw_title),
-        "country": suggest_country(combined),
+        "country": country,
         "privilege": suggest_privilege(combined),
         "price": suggest_price(combined),
         "sector": suggest_sector(combined, title=raw_title),
