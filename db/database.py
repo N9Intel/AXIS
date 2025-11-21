@@ -192,6 +192,57 @@ def insert_listing(
         return cursor.lastrowid
 
 
+def get_listing_by_id(listing_id: int) -> Optional[Tuple]:
+    """
+    Return a single listing row by ID, joined with broker name.
+
+    Row layout:
+    (
+        id,
+        broker_name,
+        access_type,
+        country,
+        privilege,
+        price,
+        description,
+        source,
+        post_date,
+        sector,
+        revenue,
+        raw_title,
+        raw_text,
+        raw_url,
+        created_at,
+    )
+    """
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                l.id,
+                b.name AS broker_name,
+                l.access_type,
+                l.country,
+                l.privilege,
+                l.price,
+                l.description,
+                l.source,
+                l.post_date,
+                l.sector,
+                l.revenue,
+                l.raw_title,
+                l.raw_text,
+                l.raw_url,
+                l.created_at
+            FROM listings l
+            JOIN brokers b ON l.broker_id = b.id
+            WHERE l.id = ?
+            """,
+            (listing_id,),
+        )
+        return cursor.fetchone()
+
 
 def get_all_listings() -> List[Tuple]:
     with get_connection() as conn:
