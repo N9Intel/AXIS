@@ -733,9 +733,7 @@ def add_raw_listing_flow() -> None:
         print("\n[ERROR] Raw post text cannot be empty.\n")
         wait_for_enter()
         return
-
-    # --- Structured fields (manual for now) ---
-        # --- Structured fields (parser suggestions + edit) ---
+        
     print("\n[Parser suggestions]\n")
     suggested = suggest_listing_fields(raw_title, raw_text)
     for key, value in suggested.items():
@@ -846,7 +844,7 @@ def add_raw_listing_flow() -> None:
 
 
 def print_menu() -> None:
-    print("AXIS v0.3 - IAB Listings")
+    print("AXIS v0.4 - IAB Listings")
     print("------------------------")
     print("[1] Add broker")
     print("[2] View brokers")
