@@ -3,7 +3,7 @@ from pathlib import Path
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
 from utils.parse import suggest_listing_fields
-from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing,get_summary_counts,get_broker_listing_counts,get_sector_counts
+from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing,get_summary_counts,get_broker_listing_counts,get_sector_counts,get_listing_by_id
 from datetime import datetime
 import csv
 
@@ -47,6 +47,62 @@ def print_brokers(rows):
         print(f"    Created: {created_at}")
         print()
     print()
+
+def print_listing_detail(row: tuple) -> None:
+    (
+        listing_id,
+        broker_name,
+        access_type,
+        country,
+        privilege,
+        price,
+        description,
+        source,
+        post_date,
+        sector,
+        revenue,
+        raw_title,
+        raw_text,
+        raw_url,
+        created_at,
+    ) = row
+
+    print("\n==================== LISTING DETAIL ====================\n")
+    print(f"ID:        {listing_id}")
+    print(f"Broker:    {broker_name}")
+    print(f"Created:   {created_at}")
+    print()
+
+    print("[STRUCTURED]")
+    print(f"  Access:    {access_type or '-'}")
+    print(f"  Country:   {country or '-'}")
+    print(f"  Privilege: {privilege or '-'}")
+    print(f"  Price:     {price or '-'}")
+    print(f"  Sector:    {sector or '-'}")
+    print(f"  Revenue:   {revenue or '-'}")
+    print(f"  Source:    {source or '-'}")
+    print(f"  Post date: {post_date or '-'}")
+    print(f"  Desc:      {description or '-'}")
+    print()
+
+    print("[RAW TITLE]")
+    print(raw_title or "-")
+    print()
+
+    print("[RAW TEXT]")
+    if raw_text:
+        print(raw_text)
+    else:
+        print("-")
+    print()
+
+    if raw_url:
+        print("[SOURCE URL]")
+        print(raw_url)
+        print()
+
+    print("========================================================\n")
+
 
 
 def print_listings(rows):
@@ -214,6 +270,32 @@ def add_listing_flow() -> None:
 
     print(f"\n[OK] Added listing with ID {listing_id}\n")
     wait_for_enter()
+
+def view_listing_detail_flow() -> None:
+    print("\n[View listing details]\n")
+    listing_id_raw = prompt("Listing ID: ").strip()
+
+    if not listing_id_raw:
+        print("\n[ERROR] Listing ID is required.\n")
+        wait_for_enter()
+        return
+
+    try:
+        listing_id = int(listing_id_raw)
+    except ValueError:
+        print("\n[ERROR] Listing ID must be a whole number.\n")
+        wait_for_enter()
+        return
+
+    row = get_listing_by_id(listing_id)
+    if not row:
+        print(f"\n[INFO] No listing found with ID {listing_id}.\n")
+        wait_for_enter()
+        return
+
+    print_listing_detail(row)
+    wait_for_enter()
+
 
 
 def view_listings_flow() -> None:
@@ -767,6 +849,7 @@ def print_menu() -> None:
     print("[10] Export listings to CSV")
     print("[11] Basic analytics")
     print("[12] Add listing from raw post")
+    print("[13] View listing details")
     print("[0] Exit")
     print()
 
@@ -801,6 +884,8 @@ def main() -> None:
             analytics_flow()
         elif choice == "12":
             add_raw_listing_flow()
+        elif choice == "13":
+            view_listing_detail_flow()
         elif choice == "0":
             print("\nGoodbye.\n")
             sys.exit(0)
