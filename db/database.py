@@ -146,9 +146,9 @@ def insert_listing(
     post_date: str,
     sector: str,
     revenue: str,
-    raw_title: str = "",
-    raw_text: str = "",
-    raw_url: str = "",
+    raw_title: Optional[str] = None,
+    raw_text: Optional[str] = None,
+    raw_url: Optional[str] = None,
 ) -> int:
     """
     Insert a listing.
