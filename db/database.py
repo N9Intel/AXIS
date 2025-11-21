@@ -261,6 +261,9 @@ def get_all_listings() -> List[Tuple]:
                 l.post_date,
                 l.sector,
                 l.revenue,
+                l.raw_title,
+                l.raw_text,
+                l.raw_url,
                 l.created_at
             FROM listings l
             JOIN brokers b ON l.broker_id = b.id
@@ -270,24 +273,28 @@ def get_all_listings() -> List[Tuple]:
         return cursor.fetchall()
 
 
+
 def find_listings_by_broker_name(broker_name: str) -> List[Tuple]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
             """
             SELECT
-                l.id,
-                b.name AS broker_name,
-                l.access_type,
-                l.country,
-                l.privilege,
-                l.price,
-                l.description,
-                l.source,
-                l.post_date,
-                l.sector,
-                l.revenue,
-                l.created_at
+            l.id,
+            b.name AS broker_name,
+            l.access_type,
+            l.country,
+            l.privilege,
+            l.price,
+            l.description,
+            l.source,
+            l.post_date,
+            l.sector,
+            l.revenue,
+            l.raw_title,
+            l.raw_text,
+            l.raw_url,
+            l.created_at
             FROM listings l
             JOIN brokers b ON l.broker_id = b.id
             WHERE b.name = ?
@@ -304,18 +311,21 @@ def find_listings_by_sector(sector: str) -> List[Tuple]:
         cursor.execute(
             """
             SELECT
-                l.id,
-                b.name AS broker_name,
-                l.access_type,
-                l.country,
-                l.privilege,
-                l.price,
-                l.description,
-                l.source,
-                l.post_date,
-                l.sector,
-                l.revenue,
-                l.created_at
+            l.id,
+            b.name AS broker_name,
+            l.access_type,
+            l.country,
+            l.privilege,
+            l.price,
+            l.description,
+            l.source,
+            l.post_date,
+            l.sector,
+            l.revenue,
+            l.raw_title,
+            l.raw_text,
+            l.raw_url,
+            l.created_at
             FROM listings l
             JOIN brokers b ON l.broker_id = b.id
             WHERE l.sector = ?
@@ -371,6 +381,9 @@ def search_query(q: str) -> List[Tuple]:
             l.post_date,
             l.sector,
             l.revenue,
+            l.raw_title,
+            l.raw_text,
+            l.raw_url,
             l.created_at
         FROM listings l
         JOIN brokers b ON l.broker_id = b.id
@@ -400,18 +413,21 @@ def find_duplicate_listings(
         cursor.execute(
             """
             SELECT
-                l.id,
-                b.name AS broker_name,
-                l.access_type,
-                l.country,
-                l.privilege,
-                l.price,
-                l.description,
-                l.source,
-                l.post_date,
-                l.sector,
-                l.revenue,
-                l.created_at
+            l.id,
+            b.name AS broker_name,
+            l.access_type,
+            l.country,
+            l.privilege,
+            l.price,
+            l.description,
+            l.source,
+            l.post_date,
+            l.sector,
+            l.revenue,
+            l.raw_title,
+            l.raw_text,
+            l.raw_url,
+            l.created_at
             FROM listings l
             JOIN brokers b ON l.broker_id = b.id
             WHERE
@@ -440,32 +456,6 @@ def find_duplicate_listings(
         )
         return cursor.fetchall()
 
-
-
-def get_listing_by_id(listing_id: int) -> Optional[Tuple]:
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT
-                id,
-                broker_id,
-                access_type,
-                country,
-                privilege,
-                price,
-                description,
-                source,
-                post_date,
-                sector,
-                revenue,
-                created_at
-            FROM listings
-            WHERE id = ?
-            """,
-            (listing_id,),
-        )
-        return cursor.fetchone()
 
 
 def update_listing(listing_id: int,access_type: str,country: str,privilege: str,price: str,description: str,source: str,post_date: str,sector: str,revenue: str,) -> None:

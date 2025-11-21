@@ -3,7 +3,7 @@ from pathlib import Path
 from utils.normalize import normalize_broker_name, normalize_sector, normalize_revenue
 from utils.scoring import calculate_tier
 from utils.parse import suggest_listing_fields
-from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings,get_listing_by_id, update_listing,get_broker_by_id,delete_listing,get_summary_counts,get_broker_listing_counts,get_sector_counts,get_listing_by_id
+from db.database import create_tables,insert_broker,get_all_brokers,find_broker_by_name,insert_listing,get_all_listings,find_listings_by_broker_name,find_listings_by_sector,search_query,find_duplicate_listings, update_listing,get_broker_by_id,delete_listing,get_summary_counts,get_broker_listing_counts,get_sector_counts,get_listing_by_id
 from datetime import datetime
 import csv
 
@@ -47,6 +47,49 @@ def print_brokers(rows):
         print(f"    Created: {created_at}")
         print()
     print()
+
+
+def print_listings(rows: list[tuple]) -> None:
+    """
+    Compact table-style output for multiple listings (not full detail view).
+    Used by: view_listings, find_by_broker, search, exports preview, etc.
+    """
+
+    if not rows:
+        print("\n[No listings found]\n")
+        return
+
+    print()
+
+    for row in rows:
+        (
+            listing_id,
+            broker_name,
+            access_type,
+            country,
+            privilege,
+            price,
+            description,
+            source,
+            post_date,
+            sector,
+            revenue,
+            raw_title,
+            raw_text,
+            raw_url,
+            created_at,
+        ) = row
+
+        short_desc = description[:60] + "..." if description and len(description) > 60 else description
+
+        print(f"[{listing_id}] {broker_name} | {access_type or '-'} | {country or '-'} | {price or '-'}")
+        print(f"    Sector: {sector or '-'} | Revenue: {revenue or '-'} | Date: {post_date or '-'}")
+        print(f"    Desc: {short_desc or '-'}")
+        print(f"    Created: {created_at}")
+        print()
+
+    print()
+
 
 def print_listing_detail(row: tuple) -> None:
     (
@@ -103,41 +146,6 @@ def print_listing_detail(row: tuple) -> None:
 
     print("========================================================\n")
 
-
-
-def print_listings(rows):
-    if not rows:
-        print("\n[No listings found]\n")
-        return
-
-    print()
-    for (
-        listing_id,
-        broker_name,
-        access_type,
-        country,
-        privilege,
-        price,
-        description,
-        source,
-        post_date,
-        sector,
-        revenue,
-        created_at,
-    ) in rows:
-        print(f"[{listing_id}] Broker: {broker_name}")
-        print(
-            f"    Access: {access_type or '-'} | Country: {country or '-'} | "
-            f"Privilege: {privilege or '-'}"
-        )
-        print(f"    Price: {price or '-'} | Sector: {sector or '-'} | Revenue: {revenue or '-'}")
-        print(f"    Source: {source or '-'} | Post date: {post_date or '-'}")
-        if description:
-            short_desc = description if len(description) <= 100 else description[:97] + "..."
-            print(f"    Desc: {short_desc}")
-        print(f"    Created: {created_at}")
-        print()
-    print()
 
 
 def add_broker_flow() -> None:
@@ -371,7 +379,7 @@ def edit_listing_flow() -> None:
 
     (
         _id,
-        broker_id,
+        broker_name,
         current_access_type,
         current_country,
         current_privilege,
@@ -381,17 +389,13 @@ def edit_listing_flow() -> None:
         current_post_date,
         current_sector,
         current_revenue,
+        current_raw_title,
+        current_raw_text,
+        current_raw_url,
         created_at,
     ) = row
 
-    
-    broker_row = get_broker_by_id(broker_id)
-    if broker_row:
-        broker_name = broker_row[1]
-        print(f"\nEditing listing [{listing_id}] for broker: {broker_name}")
-    else:
-        print(f"\nEditing listing [{listing_id}] (broker_id={broker_id})")
-
+    print(f"\nEditing listing [{listing_id}] for broker: {broker_name}")
     print(f"Created at: {created_at}\n")
 
     print("Press ENTER to keep existing value.\n")
@@ -412,7 +416,8 @@ def edit_listing_flow() -> None:
     if not new_price:
         new_price = current_price
 
-    new_description = prompt(f"Description [{current_description[:40]}...]: ").strip()
+    desc_preview = current_description[:40] + "..." if current_description else "-"
+    new_description = prompt(f"Description [{desc_preview}]: ").strip()
     if not new_description:
         new_description = current_description
 
@@ -501,7 +506,7 @@ def delete_listing_flow() -> None:
 
     (
         _id,
-        broker_id,
+        broker_name,
         access_type,
         country,
         privilege,
@@ -511,11 +516,14 @@ def delete_listing_flow() -> None:
         post_date,
         sector,
         revenue,
+        raw_title,
+        raw_text,
+        raw_url,
         created_at,
     ) = row
 
     print("\nYou are about to delete this listing:\n")
-    print(f"[{listing_id}] Broker ID: {broker_id}")
+    print(f"[{listing_id}] Broker: {broker_name}")
     print(
         f"    Access: {access_type or '-'} | Country: {country or '-'} | "
         f"Privilege: {privilege or '-'}"
@@ -578,6 +586,9 @@ def export_listings_to_csv(rows: list[tuple], filename: str | None = None) -> Pa
             post_date,
             sector,
             revenue,
+            raw_title,
+            raw_text,
+            raw_url,
             created_at,
         ) in rows:
             writer.writerow(
@@ -596,6 +607,7 @@ def export_listings_to_csv(rows: list[tuple], filename: str | None = None) -> Pa
                     "created_at": created_at,
                 }
             )
+
 
     return export_path
 
@@ -786,7 +798,6 @@ def add_raw_listing_flow() -> None:
         wait_for_enter()
         return
 
-    # --- Deduplication check (uses structured fields) ---
     duplicates = find_duplicate_listings(
         broker_id=broker_id,
         access_type=access_type,
