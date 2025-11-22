@@ -1,114 +1,134 @@
-# AXIS v0.3 — IAB Intelligence Collection & Analysis Framework
+# AXIS v0.4 — IAB Intelligence Processing & Raw Post Parser
 
-AXIS is a cyber intelligence framework designed for collecting, organizing, and analyzing data related to **Initial Access Broker (IAB)** activity across underground forums.  
-Version **0.3** introduces a structured relational database, a refined data model for brokers and listings, advanced search capabilities, deduplication logic, and foundational analytics.
+AXIS is a cyber intelligence framework for collecting, structuring, and analyzing **Initial Access Broker (IAB)** listings from underground forums.  
+Version **0.4** introduces the first major upgrade to AXIS’s ingestion pipeline, adding full **raw post parsing**, **parser-backed field suggestion**, and **raw data preservation** for improved analyst workflows.
 
-AXIS serves as a free, open-source foundation for analysts who track access brokers, compromised organizations, and access sale patterns on the dark web.
+AXIS continues to evolve into a powerful, analyst-focused platform for monitoring access brokers and compromised organization listings.
 
 ---
 
 ## Overview
 
-AXIS provides a structured workflow for analysts to:
+AXIS v0.4 enhances the intelligence workflow by:
 
-- Maintain a centralized catalog of **brokers** and their historical activity.
-- Record and normalize **access listings** with consistent metadata.
-- Query, search, and filter listings using multiple methods.
-- Export structured intelligence for reporting or external analysis.
-- Perform basic analytics to understand broker activity and sector distribution.
+- Ingesting complete raw posts from forums.
+- Extracting structured metadata via a parser suggestion engine.
+- Preserving raw titles, raw text, and source URLs.
+- Allowing analysts to review and correct parser suggestions before saving.
+- Extending the schema to support raw + structured intelligence side-by-side.
 
-The system is built around **SQLite**, ensuring portability and reliability while keeping deployment simple.
-
----
-
-## Key Features (v0.3)
-
-### 1. Broker Management
-- Add, view, and retrieve brokers.
-- Normalization of broker names for consistency.
-- Support for analyst notes per broker.
-- Automatic timestamping.
+This version solidifies AXIS as a proper **threat intelligence data processor**, not just a listing tracker.
 
 ---
 
-### 2. Structured Listings Model
-Each listing is linked to a broker and includes:
+## Key Features (v0.4)
 
-- Access type (e.g., RDP, VPN, Citrix)
-- Country (ISO-like format)
-- Privilege level (admin/user)
-- Pricing data (start/step/blitz or fixed)
-- Description of the access
-- Source forum
-- Post date (validated, `YYYY-MM-DD`)
-- Sector (normalized)
-- Revenue range (normalized)
-- Automatic deduplication checks
-- Automatic timestamping
+### 1. Raw Post Ingestion (New)
+Paste full underground forum listings exactly as posted:
+
+- Multiline raw text input  
+- Raw title  
+- Optional source URL  
+- Terminates input with `.`  
+- Stored alongside structured fields for auditing and reprocessing  
+
+**Command:** `Add listing from raw post` (Menu option **[12]**)
 
 ---
 
-### 3. Advanced Search (Free-Form Query Engine)
-AXIS includes a multi-field search mechanism:
+### 2. Parser Suggestion Engine (New)
+Automatically extracts common IAB metadata from raw text:
 
-- Matches across all listing fields.
-- Multiple-term matching (logical AND).
+- **Access type** (rdp, vpn, fortinet, citrix, rdweb, etc.)  
+- **Country** (from GEO lines or text)  
+- **Privilege** (DA/admin/user)  
+- **Price** (START / STEP / BLITZ or raw numbers)  
+- **Sector** (mapped using expanded SECTOR_MAP)  
+- **Revenue** (supports kk, million/billion, shorthand)  
+- **Description** (from title when possible)  
+- **Post date** (if included in raw text)
 
+Analysts can override any suggested field before saving.
 
 ---
 
-### 4. Deduplication Engine
-AXIS detects potential duplicate listings using:
+### 3. Expanded Data Model (Updated Schema)
 
-- Broker match  
-- Access type  
+Each listing now contains:
+
+#### Structured fields:
+- broker_id  
+- access type  
+- country  
+- privilege  
+- price  
+- description  
+- source  
+- validated post date  
+- normalized sector  
+- normalized revenue  
+
+#### New raw fields (v0.4):
+- `raw_title`  
+- `raw_text`  
+- `raw_url`
+
+This preserves original source data for future reprocessing or QA.
+
+---
+
+### 4. Full Listing Detail View (Updated)
+
+A dedicated detail viewer shows both structured and raw intelligence:
+
+#### Structured
+- Access  
 - Country  
-- Pricing  
-- Description  
-- Source  
-- Post date  
+- Privilege  
+- Price  
 - Sector  
 - Revenue  
+- Source  
+- Post date  
+- Description  
 
-Users are warned before inserting duplicates.
+#### Raw
+- Full raw title  
+- Full raw text  
+- Optional source URL  
 
----
-
-### 5. Editing and Deleting Listings
-- Update any field of an existing listing.
-- Delete listings safely using the listing ID.
-
----
-
-### 6. CSV Export System
-Export listings to CSV with filtering options:
-
-- All listings  
-- By broker  
-- By sector  
-- By free-form query  
-
-Exports are stored in `exports/`.
+Menu option: **[13] View listing details**
 
 ---
 
-### 7. Basic Analytics
-Provides statistical insight into IAB activity:
+### 5. Improved Normalization System
+Includes:
 
-- Total brokers  
-- Total listings  
-- Top brokers by listing count  
-- Broker tier classification (High / Medium / Low)  
-- Sector distribution  
+- Significantly expanded **sector mapping** (60+ sectors)  
+- Better revenue parsing  
+- Better GEO → country normalization  
+- Improved access/privilege detection  
 
 ---
 
-### 8. Enhanced Normalization Engine
-Improved normalization for:
+### 6. Enhanced Price Parsing
+Handles:
 
-- Broker names  
-- Revenue ranges  
-- Sectors (including dozens of real-world industries)
+- START/STEP/BLITZ formats  
+- `$1400`, `price is 1400`, `1400$`  
+- Multi-price detection  
+- Ignores noise like `code=1014` or `host=1000+`
+
+---
+
+### 7. Updated Core Functions
+All major components now work with raw + structured data:
+
+- Edit listings  
+- Delete listings  
+- Search (structured fields only)  
+- CSV export  
+- Analytics  
 
 ---
 
@@ -134,29 +154,6 @@ python3 main.py
 [9] Delete listing
 [10] Export listings to CSV
 [11] Basic analytics
+[12] Add listing from raw post
+[13] View listing details
 [0] Exit
-```
-
-License
-MIT License
-
-Copyright (c) 2025 N9 Intelligence
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
